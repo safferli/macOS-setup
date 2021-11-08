@@ -14,7 +14,8 @@ https://gist.github.com/LukeSmithxyz/e62f26e55ea8b0ed41a65912fbebbe52
 
 https://github.com/zsh-users/antigen
 
-
+https://github.com/michaelschwobe/mac-dev-setup
+https://github.com/RamiKrispin/awesome-ds-setting
 
 
 
