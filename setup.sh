@@ -18,7 +18,9 @@ https://github.com/michaelschwobe/mac-dev-setup
 https://github.com/RamiKrispin/awesome-ds-setting
 
 
-
+# disable screensaver at login to avoid bug (or turn off fast user switching)
+# killall ScreenSaverEngine if you're stuck on the screensaver
+sudo defaults write /Library/Preferences/com.apple.screensaver loginWindowIdleTime 0
 
 
 
