@@ -22,8 +22,9 @@ https://github.com/RamiKrispin/awesome-ds-setting
 # killall ScreenSaverEngine if you're stuck on the screensaver
 sudo defaults write /Library/Preferences/com.apple.screensaver loginWindowIdleTime 0
 
-
-
+# To speed up SMB file browsing, you can prevent macOS from reading .DS_Store files on SMB share
+# https://support.apple.com/en-us/HT208209
+sudo defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE
 
 
 
