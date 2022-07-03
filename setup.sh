@@ -17,6 +17,13 @@ https://github.com/zsh-users/antigen
 https://github.com/michaelschwobe/mac-dev-setup
 https://github.com/RamiKrispin/awesome-ds-setting
 
+# https://apple.stackexchange.com/questions/101090/list-of-all-packages-installed-using-homebrew
+# `brew bundle dump` to get the Brewfile
+brew bundle 
+
+
+
+
 
 # disable screensaver at login to avoid bug (or turn off fast user switching)
 # killall ScreenSaverEngine if you're stuck on the screensaver
@@ -26,6 +33,9 @@ sudo defaults write /Library/Preferences/com.apple.screensaver loginWindowIdleTi
 # https://support.apple.com/en-us/HT208209
 sudo defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRUE
 
+# show all hidden files by default
+# shortcut to toogle: CMD-SHIFT-.
+defaults write com.apple.finder AppleShowAllFiles TRUE && killall Finder
 
 
 
