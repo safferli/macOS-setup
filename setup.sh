@@ -21,6 +21,32 @@ https://github.com/RamiKrispin/awesome-ds-setting
 # `brew bundle dump` to get the Brewfile
 brew bundle 
 
+## battery charging
+# turn off "smart" battery charging (how)?
+# then install this: https://github.com/actuallymentor/battery
+sudo curl https://raw.githubusercontent.com/actuallymentor/battery/main/setup.sh | sudo bash
+# has ^M characters on all lines: 
+sudo dos2unix /usr/local/bin/battery
+
+
+## set up emacs-mac with launchpad/app support
+# https://gist.github.com/jasonm23/89ad29748f49ddbafab1
+brew tap railwaycat/emacsmacport
+#brew update
+brew install --cask emacs-mac
+
+#if [[ -d /usr/local/Cellar/emacs-mac ]]; then
+ # brew upgrade emacs-mac
+ #else
+  #brew install emacs-mac
+  #fi  
+
+# brew install emacs-mac --with-emacs-sexy-icon --with-natural-title-bar --with-starter
+
+# Locate the Emacs.app from brew installed emacs-mac
+#mv $( brew info emacs-mac | grep -A1 "was installed to:" | tail -1 )/Emacs.app /Applications/
+#touch /Applications/Emacs.app
+
 
 
 
