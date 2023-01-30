@@ -21,6 +21,17 @@ https://github.com/RamiKrispin/awesome-ds-setting
 # `brew bundle dump` to get the Brewfile
 brew bundle 
 
+## python3 is installed, this upgrades the pip setup:
+pip install --upgrade setuptools
+pip install --upgrade pip
+
+
+## config files
+~/.emacs.d/init.el
+~/.config/starship.toml 
+
+
+
 ## battery charging
 # turn off "smart" battery charging (how)?
 # then install this: https://github.com/actuallymentor/battery
@@ -61,7 +72,7 @@ sudo defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool TRU
 
 # show all hidden files by default
 # shortcut to toogle: CMD-SHIFT-.
-defaults write com.apple.finder AppleShowAllFiles TRUE && killall Finder
+sudo defaults write com.apple.finder AppleShowAllFiles TRUE && killall Finder
 
 
 
