@@ -2,6 +2,7 @@
 (require 'package)
 (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -32,12 +33,55 @@
 (defun safferli/config-visit ()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
-(global-set-key (kbd "C-c e") 'safferli/config-visit)
+(global-set-key (kbd "C-c i e") 'safferli/config-visit)
 
 (defun safferli/config-reload ()
   (interactive)
   (load-file (expand-file-name "~/.emacs.d/init.el")))
-(global-set-key (kbd "C-c r") 'safferli/config-reload)
+(global-set-key (kbd "C-c i r") 'safferli/config-reload)
+
+
+
+
+;; TODOs
+;; https://www.emacswiki.org/emacs/CsvMode
+;; https://github.com/emacs-dashboard/emacs-dashboard
+;; https://github.com/minad/corfu
+;; http://company-mode.github.io/
+
+
+(use-package dashboard
+  :config
+  (setq dashboard-startup-banner 'logo)
+  (dashboard-setup-startup-hook)
+  :hook ((after-init . dashboard-refresh-buffer)))
+
+;; run M-x ll-the-icons-install-fonts to install the fonts
+(use-package all-the-icons
+  :if (display-graphic-p))
+
+;; (use-package treemacs-icons-dired
+;;   :after treemacs dired
+;;   :ensure t
+;;   :config (treemacs-icons-dired-mode))
+
+
+;; (use-package obsidian
+;;   :ensure t
+;;   :demand t
+;;   :config
+;;   (obsidian-specify-path "~/Onedrive/Documents/obsidian-notes/")
+;;   (global-obsidian-mode t)
+;;   :custom
+;;   ;; This directory will be used for `obsidian-capture' if set.
+;;   (obsidian-inbox-directory "001 Zettelkasten")
+;;   :bind (:map obsidian-mode-map
+;;   ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
+;;   ("C-c C-o" . obsidian-follow-link-at-point)
+;;   ;; Jump to backlinks
+;;   ("C-c C-b" . obsidian-backlink-jump)
+;;   ;; If you prefer you can use `obsidian-insert-link'
+;;   ("C-c C-l" . obsidian-insert-wikilink)))
 
 
 
@@ -85,6 +129,23 @@
 ;; (ido-vertical-mode 1)
 
 
+;; ivy, counsel, swiper
+
+
+(use-package csv-mode
+  :mode
+  ("\\.csv\\'" . csv-mode)
+  :init
+  ;; font-lock makes large files very sluggish
+  (add-hook 'csv-mode-hook (lambda () (font-lock-mode -1)))
+  ;; only apply to large files
+  ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
+  :config
+  (setq csv-align-max-width 7)
+  (setq csv-separators '("," "    ", ";"))
+  (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
+
+
 ;; highlight current line
 (when window-system (add-hook 'prog-mode-hook 'hl-line-mode))
 
@@ -99,6 +160,8 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :hook (markdown-mode . auto-fill-mode)
+  ;; :bind ( :map markdown-mode-map
+  ;;         ("M-Q" . split-pararagraph-into-lines))
   :custom-face (markdown-code-face ((t (:inherit org-block)))))
 
 ;; adoc-mode
@@ -117,20 +180,50 @@
                  )))
 
 
+(use-package multiple-cursors
+  :ensure t
+  :bind (("M-." . mc/mark-next-like-this)
+         ("M-," . mc/unmark-next-like-this)
+         ("C-S-<mouse-1>" . mc/add-cursor-on-click)
+         ("C-c m c" . mc/edit-lines)))
+
+;; Distraction-free screen
+(use-package olivetti
+  :init
+  (setq olivetti-body-width .67)
+  :config
+  (defun distraction-free ()
+    "Distraction-free writing environment"
+    (interactive)
+    (if (equal olivetti-mode nil)
+        (progn
+          (window-configuration-to-register 1)
+          (delete-other-windows)
+          (text-scale-increase 2)
+          (olivetti-mode t))
+      (progn
+        (jump-to-register 1)
+        (olivetti-mode 0)
+        (text-scale-decrease 2))))
+  :bind (("C-<f9>" . distraction-free)
+	 ("<f9>" . olivetti-mode)))
 
 
 ;; uniquify package
 
-;; unfill (opposite of fill)
-; rebind M-q to toogle fill/unfill
+;; unfill (opposite of fill)					
 (use-package unfill
+  ;; rebind M-q to toogle fill/unfill
   :bind ([remap fill-paragraph] . unfill-toggle))
 
 
 ;; expand semantically depending on mode/region
 (use-package expand-region
-  :bind ("C-=" . er/expand-region))
-
+  :bind (("C-c x r" . er/expand-region)
+	 ("C-c x q" . er/mark-inside-quotes)
+	 ("C-c x w" . er/mark-outside-quotes)
+	 ("C-c x p" . er/mark-inside-pairs)
+	 ))
 
 ;; (custom-set-variables
 ;;   ; put all backups to this dir: ~/.emacs.d/backups/
@@ -174,7 +267,6 @@
 
 ; start a command and wait, then this will show the completions available:
 (use-package which-key
-  :ensure t
   ;:defer nil
   :init
   (which-key-mode))
@@ -185,9 +277,9 @@
 
 ; hex colour code will be highlighted in the corresponding colour
 (use-package rainbow-mode
-  :ensure t
-  :init
-  (add-hook 'prog-mode-hook 'rainbow-mode))
+  ;:delight
+  :hook ((prog-mode text-mode) . rainbow-mode))
+
 
 ;; highlight matching parens (ensure nil, because this is a core package)
 (use-package paren
@@ -197,9 +289,39 @@
   :config
   (show-paren-mode +1))
 
+;; parenthetical editing in emacs
+;; (use-package paredit
+;;   :init
+;;   (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
+;;   :config
+;;   (show-paren-mode t)
+;;   ) 
+
+
+;; this has a lot of examples:
+;; https://ebzzry.com/en/emacs-pairs/#installation
+(use-package smartparens
+  :init
+  :hook
+  (prog-mode . smartparens-mode)
+  (emacs-lisp-mode . smartparens-strict-mode)
+  :config
+  (progn
+    ;; load defaults
+    (require 'smartparens-config)
+    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+    (setq sp-show-pair-from-inside nil)
+    )
+  ;; :diminish smartparens-mode
+  :custom-face
+  (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
+  )
+
+
+
+
 ;; colour-code delimiter depth
 (use-package rainbow-delimiters
-  :ensure t
   :defer nil
   :config
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
@@ -207,6 +329,17 @@
 ;; flycheck
 ;;(use-package flycheck
 ;;  :ensure t)
+
+
+;; quarto are the next-gen data science markdowns
+(use-package quarto-mode
+  :mode (("\\.Rmd" . poly-quarto-mode))
+  )
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; spelling                                                               ;;
@@ -218,13 +351,24 @@
 ;;       `((nil "[[:alpha:]]" "[^[:alpha:]]" "[']" t ("-d" "en_GB") nil utf-8)))
 
 ;; On OS X/Darwin, make sure we add the path to the homebrew installs
-(when (string-equal system-type "darwin")
-  (setq exec-path (append exec-path '"/opt/homebrew/bin")))
+;; (when (string-equal system-type "darwin")
+;;   (setq exec-path (append exec-path "/opt/homebrew/bin")))
 ;; or directly push aspell bin 
 ;; (setq ispell-program-name "/opt/local/bin/aspell")
 ;; for macOS, this loads all PATH variables 
 ;; (package-install 'exec-path-from-shell)
 ;; (exec-path-from-shell-initialize)
+
+;; https://emacs.stackexchange.com/questions/76920/cannot-update-melpa-m-x-package-refresh-contents?noredirect=1#comment127700_76920
+;; exec-path, not strictly necessary, but doesn't hurt
+;; load-path, use cmake's cmake-mode.el not emacs's
+(cond ((string-match-p "aarch64-apple" system-configuration)
+       (add-to-list 'load-path "/opt/homebrew/share/emacs/site-lisp/cmake")
+       (add-to-list 'exec-path "/opt/homebrew/bin"))
+      ((string-match-p "x86_64-apple" system-configuration)
+       (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/cmake")
+       (add-to-list 'exec-path "/usr/local/bin")))
+
 
 (when (executable-find "aspell")
   (setq-default ispell-program-name "aspell")
@@ -259,11 +403,15 @@
   (flyspell-buffer))
 
 
+;; opens a macOS X finder in the current folder 
+(use-package reveal-in-osx-finder
+  :bind
+  ("C-c f" . reveal-in-osx-finder)) 
+
 
 
 ;; magit - git
 (use-package magit
-  :ensure t
   :config
   (setq magit-push-always-verify nil)
   (setq git-commit-summary-max-length 50)
@@ -281,7 +429,6 @@
 
 ;; zenburn theme
 (use-package zenburn-theme
-  :ensure t
   :defer nil
   :config
   (load-theme 'zenburn t))
@@ -308,6 +455,7 @@
 
 ;; not all modes do this
 (global-set-key "\C-c;" 'comment-region)
+(global-set-key "\C-c:" 'uncomment-region)
 ;; quick way to get to top/bottom
 (global-set-key [home] 'beginning-of-buffer) 
 (global-set-key [end]  'end-of-buffer) 
@@ -350,6 +498,13 @@
 (setq custom-file "~/.emacs.d/package-selected-packages.el")
 (load custom-file)
 
+;; "open with" in the original frame, not a new one 
+;; https://superuser.com/questions/277755/emacs-opens-files-in-a-new-frame-when-opened-with-open-a
+(setq ns-pop-up-frames nil)
+
+
+
+
 ;; misc topics
 
 ;; If you use M-! (shell-command) and then press M-n
@@ -369,7 +524,7 @@
 
 ;; NUMBER must satisfy `numberp', while PERCENT must be `natnump'."
 ;;   (unless (numberp number)
-;;     (user-error "NUMBER must satisfy numberp"))
+;;     (user-error "NUMBER must satisfy  numberp"))
 ;;   (unless (natnump percent)
 ;;     (user-error "PERCENT must satisfy natnump"))
 ;;   (let* ((pc (/ (float percent) 100))

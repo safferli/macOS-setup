@@ -38,6 +38,9 @@ fi
 # starship cross-shell prompt 
 eval "$(starship init zsh)"
 
+# https://emacs.stackexchange.com/questions/76920/cannot-update-melpa-m-x-package-refresh-contents?noredirect=1#comment127700_76920
+# add Homebrew convenience vars, and add to PATH/INFOPATH/MANPATH 
+eval $(brew shellenv)
 
 
 
