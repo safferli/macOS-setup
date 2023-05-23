@@ -19,8 +19,8 @@
 (eval-when-compile
   (require 'use-package))
 
-;;(require 'diminish)               ;; if you use :diminish
-(require 'bind-key)                ;; if you use any :bind variant
+(require 'diminish)               ;; if you use :diminish
+(require 'bind-key)               ;; if you use any :bind variant
 
 ;; generate statistics with M-x use-package-report
 (setq use-package-compute-statistics t)
@@ -42,21 +42,32 @@
 
 
 
-
 ;; TODOs
 ;; https://www.emacswiki.org/emacs/CsvMode
-;; https://github.com/emacs-dashboard/emacs-dashboard
-;; https://github.com/minad/corfu
+;; https://github.com/minad/Corfu
 ;; http://company-mode.github.io/
+;; https://github.com/agzam/mw-thesaurus.el
+
+
+;; (use-package centered-cursor-mode
+;;   :diminish centered-cursor-mode)
+;; or this?
+;; https://github.com/jmercouris/emacs-centered-point
 
 
 (use-package dashboard
   :config
   (setq dashboard-startup-banner 'logo)
   (dashboard-setup-startup-hook)
+  (setq dashboard-items '((recents . 5)
+                        ;;(bookmarks . 5)
+                        (projects . 5)
+                        ;;(agenda . 5)
+                        ;;(registers . 5)
+			))
   :hook ((after-init . dashboard-refresh-buffer)))
 
-;; run M-x ll-the-icons-install-fonts to install the fonts
+;; run M-x all-the-icons-install-fonts to install the fonts
 (use-package all-the-icons
   :if (display-graphic-p))
 
@@ -132,6 +143,10 @@
 ;; ivy, counsel, swiper
 
 
+
+
+
+
 (use-package csv-mode
   :mode
   ("\\.csv\\'" . csv-mode)
@@ -179,6 +194,13 @@
 		 (concat "asciidoctor " (shell-quote-argument buffer-file-name))
                  )))
 
+;; quarto are the next-gen data science markdowns
+(use-package quarto-mode
+  :mode
+  (("\\.Rmd" . poly-quarto-mode))
+  )
+
+
 
 (use-package multiple-cursors
   :ensure t
@@ -210,6 +232,12 @@
 
 
 ;; uniquify package
+
+(use-package yasnippet
+  :config
+  (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+  (yas-global-mode 1)
+  )
 
 ;; unfill (opposite of fill)					
 (use-package unfill
@@ -267,9 +295,13 @@
 
 ; start a command and wait, then this will show the completions available:
 (use-package which-key
-  ;:defer nil
+  ;;:defer nil
+  :diminish
   :init
-  (which-key-mode))
+  (which-key-mode)
+  ;; :config
+  ;; (setq which-key-idle-delay 0.2)
+  )
 ;  (add-hook 'after-init-hook 'which-key-mode))
 
 ; avy should be amazing(?)
@@ -277,7 +309,8 @@
 
 ; hex colour code will be highlighted in the corresponding colour
 (use-package rainbow-mode
-  ;:delight
+  ;;:delight
+  :diminish
   :hook ((prog-mode text-mode) . rainbow-mode))
 
 
@@ -331,13 +364,21 @@
 ;;  :ensure t)
 
 
-;; quarto are the next-gen data science markdowns
-(use-package quarto-mode
-  :mode (("\\.Rmd" . poly-quarto-mode))
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/github")
+    (setq projectile-project-search-path '("~/github")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind (:map projectile-mode-map
+	      ;; ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map))
   )
 
-
-
+;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
 
 
 
@@ -501,6 +542,9 @@
 ;; "open with" in the original frame, not a new one 
 ;; https://superuser.com/questions/277755/emacs-opens-files-in-a-new-frame-when-opened-with-open-a
 (setq ns-pop-up-frames nil)
+
+
+
 
 
 
