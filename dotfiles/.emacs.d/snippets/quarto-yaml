@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: quarto yaml
+# key: <quarto
+# --
+
+---
+title: "${1:title}"
+author: "Christoph Safferling"
+date: last-modified
+format: 
+  html:
+    self-contained: true
+execute: 
+  echo: false
+  warning: true 
+---
+
+$0

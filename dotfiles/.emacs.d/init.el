@@ -48,7 +48,16 @@
 ;; http://company-mode.github.io/
 ;; https://github.com/agzam/mw-thesaurus.el
 
+;; Org-mode
+;; https://github.com/abo-abo/org-download
+;; org-cite?
+;; Org-roam "A plain-text personal knowledge management system."
+;; https://github.com/kot-behemoth/awesome-org-roam
+;; https://github.com/org-roam/org-roam-ui
+;; https://orgmode.org/worg/org-contrib/babel/uses.html
 
+
+;; breaks scroll (perhaps because on mac?)
 ;; (use-package centered-cursor-mode
 ;;   :diminish centered-cursor-mode)
 ;; or this?
@@ -112,15 +121,29 @@
 ;;       frame-inhibit-implied-resize t)
 
 
+;; display a counter showing the number of the current and the total
+;; matches. Place it before the prompt.
+(setq isearch-lazy-count t)
+(setq lazy-count-prefix-format "(%s/%s) ")
+(setq lazy-count-suffix-format nil)
+;; see the preceding and following lines around a match
+(setq list-matching-lines-default-context-lines 2)
+
+;; TODO Treesitter
+;; https://youtu.be/MZPR_SC9LzE
 
 
 ;; emoji support
-(use-package emojify)
+(use-package emojify
+  :hook
+  (after-init . global-emojify-mode)
+  )
 
 (use-package ido
   :ensure t
   :init
-  (ido-mode))
+  (ido-mode)
+  )
 
 ;; (use-package ido-vertical-mode
 ;;   :requires ido
@@ -143,6 +166,16 @@
 ;; ivy, counsel, swiper
 
 
+;; M-x world-clock
+(setq display-time-world-list
+  '(("Etc/UTC" "UTC")
+    ("Europe/Paris" "Paris")
+    ("America/Montreal" "Montreal") 
+    ("Asia/Shanghai" "Chengdu")
+    ("America/Los_Angeles" "San Francisco")
+    ))
+;;(setq display-time-world-time-format "%a, %d %b %I:%M %p %Z")
+
 
 
 
@@ -157,7 +190,7 @@
   ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
   :config
   (setq csv-align-max-width 7)
-  (setq csv-separators '("," "    ", ";"))
+  (setq csv-separators '("," "\t" ";"))
   (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
 
 
@@ -208,6 +241,9 @@
          ("M-," . mc/unmark-next-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)
          ("C-c m c" . mc/edit-lines)))
+
+
+;; also check out this for more: https://protesilaos.com/codelog/2020-07-16-emacs-focused-editing/
 
 ;; Distraction-free screen
 (use-package olivetti
@@ -320,6 +356,7 @@
   :init
   (setq show-paren-delay 0)
   :config
+  (setq show-paren-style 'mixed)
   (show-paren-mode +1))
 
 ;; parenthetical editing in emacs
@@ -349,6 +386,10 @@
   :custom-face
   (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
   )
+
+;; TODO LSP mode https://emacs-lsp.github.io/lsp-mode/
+;; TODO Rust mode https://robert.kra.hn/posts/rust-emacs-setup/
+
 
 
 
