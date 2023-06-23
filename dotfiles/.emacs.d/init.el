@@ -1,3 +1,14 @@
+;;
+;; 00 Table of Contents
+;;
+
+(occur "^;; [0-9]+")
+
+
+;;
+;; 01 Package management
+;; 
+
 ;; https://ianyepan.github.io/posts/setting-up-use-package/
 (require 'package)
 (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
@@ -26,42 +37,20 @@
 (setq use-package-compute-statistics t)
 
 ;;
-;; end use-package stuff
+;; 02 Name and Email
 ;;
 
-;; load and reload config file
-(defun safferli/config-visit ()
-  (interactive)
-  (find-file "~/.emacs.d/init.el"))
-(global-set-key (kbd "C-c i e") 'safferli/config-visit)
-
-(defun safferli/config-reload ()
-  (interactive)
-  (load-file (expand-file-name "~/.emacs.d/init.el")))
-(global-set-key (kbd "C-c i r") 'safferli/config-reload)
+(setq user-full-name "Christoph Safferling")
+(setq user-mail-address "christoph.safferling@ubisoft.com")
 
 
+;;
+;; 10 Appearance
+;;
 
-;; TODOs
-;; https://www.emacswiki.org/emacs/CsvMode
-;; https://github.com/minad/Corfu
-;; http://company-mode.github.io/
-;; https://github.com/agzam/mw-thesaurus.el
-
-;; Org-mode
-;; https://github.com/abo-abo/org-download
-;; org-cite?
-;; Org-roam "A plain-text personal knowledge management system."
-;; https://github.com/kot-behemoth/awesome-org-roam
-;; https://github.com/org-roam/org-roam-ui
-;; https://orgmode.org/worg/org-contrib/babel/uses.html
-
-
-;; breaks scroll (perhaps because on mac?)
-;; (use-package centered-cursor-mode
-;;   :diminish centered-cursor-mode)
-;; or this?
-;; https://github.com/jmercouris/emacs-centered-point
+;; "open with" in the original frame, not a new one 
+;; https://superuser.com/questions/277755/emacs-opens-files-in-a-new-frame-when-opened-with-open-a
+(setq ns-pop-up-frames nil)
 
 
 (use-package dashboard
@@ -76,36 +65,55 @@
 			))
   :hook ((after-init . dashboard-refresh-buffer)))
 
+
+;; version 6.0 is now in beta, using the svg branch: https://github.com/domtronn/all-the-icons.el/tree/svg
+;; TODO keep an eye out for when it's stable! 
+;; 
 ;; run M-x all-the-icons-install-fonts to install the fonts
 (use-package all-the-icons
   :if (display-graphic-p))
 
-;; (use-package treemacs-icons-dired
-;;   :after treemacs dired
-;;   :ensure t
-;;   :config (treemacs-icons-dired-mode))
+
+;; emoji support
+(use-package emojify
+  :hook (after-init . global-emojify-mode)
+  )
 
 
-;; (use-package obsidian
-;;   :ensure t
-;;   :demand t
-;;   :config
-;;   (obsidian-specify-path "~/Onedrive/Documents/obsidian-notes/")
-;;   (global-obsidian-mode t)
-;;   :custom
-;;   ;; This directory will be used for `obsidian-capture' if set.
-;;   (obsidian-inbox-directory "001 Zettelkasten")
-;;   :bind (:map obsidian-mode-map
-;;   ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
-;;   ("C-c C-o" . obsidian-follow-link-at-point)
-;;   ;; Jump to backlinks
-;;   ("C-c C-b" . obsidian-backlink-jump)
-;;   ;; If you prefer you can use `obsidian-insert-link'
-;;   ("C-c C-l" . obsidian-insert-wikilink)))
+;; zenburn theme
+(use-package zenburn-theme
+  :defer nil
+  :config
+  (load-theme 'zenburn t))
 
 
+;; modeline -- should at some point just pull out what I want
+(use-package doom-modeline
+  :defer nil
+  :config
+  (setq doom-modeline-minor-modes t)
+  (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-unicode-fallback t)
+  ;; this is not doom-modeline specific
+  (setq column-number-mode t)
+  :hook
+  (after-init . doom-modeline-mode))
 
 
+;; titlebar with full path to buffer (%f)
+(setq-default frame-title-format "%b (%f)")
+
+
+;; highlight current line
+(when window-system (add-hook 'prog-mode-hook 'hl-line-mode))
+
+;; remove toolbar
+(if window-system
+    (tool-bar-mode -1)
+  )
+
+
+;; size and position on initial open
 ;; (setq initial-frame-alist
 ;;       (append initial-frame-alist
 ;;               '((left   . ???)
@@ -121,23 +129,233 @@
 ;;       frame-inhibit-implied-resize t)
 
 
+;; new windows open at 2/3rds and switching windows changes their size
+(use-package golden-ratio
+  :diminish
+  :init
+  (golden-ratio-mode)
+  )
+
+
+;; breaks scroll (perhaps because on mac?)
+;; (use-package centered-cursor-mode
+;;   :diminish centered-cursor-mode)
+;; or this?
+;; https://github.com/jmercouris/emacs-centered-point
+
+
+;;
+;; 20 my functions
+;;
+
+;; load and reload config file
+(defun safferli/config-visit ()
+  (interactive)
+  (find-file "~/.emacs.d/init.el"))
+(global-set-key (kbd "C-c i e") 'safferli/config-visit)
+
+(defun safferli/config-reload ()
+  (interactive)
+  (load-file (expand-file-name "~/.emacs.d/init.el")))
+(global-set-key (kbd "C-c i r") 'safferli/config-reload)
+
+;; proxy woes
+(defun safferli/set-proxy ()
+  (interactive)
+  (customize-set-variable 'url-proxy-services
+                          '(("http"  . "proxy.ubisoft.org:3218")
+                            ("https" . "proxy.ubisoft.org:3218"))))
+(defun safferli/unset-proxy ()
+  (interactive)
+  (customize-set-variable 'url-proxy-services nil))
+
+
+(defun safferli/insert-date ()
+  (interactive)
+  (let (( time (current-time-string) ))
+    (insert (format-time-string "%Y-%m-%d"))))
+
+
+;; none of these currently work because of IT restrictions
+(defun safferli/get-current-url-edge ()
+  (do-applescript "tell application \"Microsoft Edge\" to return URL of active tab of front window"))
+
+(defun safferli/get-current-title-edge ()
+  (do-applescript "tell application \"Microsoft Edge\" to return Title of active tab of front window"))
+
+(defun safferli/get-current-url-firefox ()
+  (do-applescript "tell application \"Firefox\" to activate
+                   tell application \"System Events\"
+	              keystroke \"l\" using command down
+	              keystroke \"c\" using command down
+	              key code 53 -- esc key
+                   end tell
+                   delay 0.1
+                   return the clipboard"))
+
+;; tell application "System Events" to tell process "Firefox"
+;; 	set frontmost to true
+;; 	set the_title to name of windows's item 1
+;; end tell
+
+
+;; https://pragmaticemacs.wordpress.com/category/editing/ 
+(defun safferli/align-whitespace (start end)
+  "Align columns by whitespace"
+  (interactive "r")
+  (align-regexp start end
+                "\\(\\s-*\\)\\s-" 1 0 t))
+
+
+(defun safferli/align-ampersand (start end)
+  "Align columns by ampersand"
+  (interactive "r")
+  (align-regexp start end
+                "\\(\\s-*\\)&" 1 1 t))
+
+
+; https://camdez.com/blog/2013/11/14/emacs-show-buffer-file-name/
+(defun safferli/show-buffer-file-name ()
+  "Show the full path to the current file in the minibuffer and copy it to the kill ring."
+  (interactive)
+  (let ((file-name (buffer-file-name)))
+    (if file-name
+        (progn
+          (message file-name)
+          (kill-new file-name))
+      (error "Buffer not visiting a file"))))
+
+
+;; https://stackoverflow.com/questions/17958397/emacs-delete-whitespaces-or-a-word
+(defun safferli/kill-whitespace-or-word ()
+  (interactive)
+  (if (looking-at "[ \t\n]")
+      (let ((p (point)))
+        (re-search-forward "[^ \t\n]" nil :no-error)
+        (backward-char)
+        (kill-region p (point)))
+    (kill-word 1)))
+(global-set-key (kbd "C-<delete>") 'safferli/kill-whitespace-or-word)
+
+
+
+
+;;
+;; 25 global settings 
+;;
+
+;; M-x world-clock
+(setq display-time-world-list
+  '(("Etc/UTC" "UTC")
+    ("Europe/Paris" "Paris")
+    ("America/Montreal" "Montreal") 
+    ("Asia/Shanghai" "Chengdu")
+    ("America/Los_Angeles" "San Francisco")
+    ))
+;;(setq display-time-world-time-format "%a, %d %b %I:%M %p %Z")
+
+
+;; put all backups (~ files) in a backup dir
+(defvar --backup-directory (concat user-emacs-directory "backups"))
+(if (not (file-exists-p --backup-directory))
+    (make-directory --backup-directory t))
+(setq backup-directory-alist `(("." . ,--backup-directory)))
+(setq make-backup-files t    ; backup of a file the first time it is saved
+      backup-by-copying t    ; Don't delink hardlinks
+      version-control t      ; Use version numbers on backups
+      delete-old-versions t  ; Automatically delete excess backups
+      kept-new-versions 10   ; how many of the newest versions to keep
+      kept-old-versions 5    ; and how many of the old
+)
+
+
+;; remove auto-updated custom-set-variables
+;; https://www.reddit.com/r/emacs/comments/4x655n/packageselectedpackages_always_appear_after/
+(setq custom-file "~/.emacs.d/package-selected-packages.el")
+(load custom-file)
+
+
+;; set default encoding
+(set-language-environment "UTF-8")
+(prefer-coding-system       'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+
+
+;; line numbers from emacs-26 onwards
+(use-package display-line-numbers
+    :defer nil
+    :ensure nil
+    :config
+    (global-display-line-numbers-mode))
+
+
+;; opens a macOS X finder in the current folder 
+(use-package reveal-in-osx-finder
+  :bind
+  ("C-c f" . reveal-in-osx-finder)) 
+
+;; Navigate between visible buffers (windows in emacs speak) (thanks skybert)
+(defun safferli/other-window-backward (&optional n)
+  (interactive "p")
+  (if n
+      (other-window (- n))
+    (other-frame -1)))
+(global-set-key "\C-x\C-n" 'other-window)
+(global-set-key "\C-x\C-p" 'safferli/other-window-backward)
+
+;; Give a pulse light when switching windows, or switching focus to
+;; the minibuffer.
+(require 'pulse)
+(set-face-attribute 'pulse-highlight-start-face nil :background "#49505f")
+(add-hook 'window-selection-change-functions
+          (lambda (frame)
+            (when (eq frame (selected-frame))
+              (pulse-momentary-highlight-one-line))))
+
+;; reload if files have changed on disk
+(global-auto-revert-mode 1)
+
+
+;; not all modes do this
+(global-set-key "\C-c;" 'comment-region)
+(global-set-key "\C-c:" 'uncomment-region)
+;; quick way to get to top/bottom
+(global-set-key [home] 'beginning-of-buffer) 
+(global-set-key [end]  'end-of-buffer) 
+;; join line to next line
+(global-set-key (kbd "C-j")
+            (lambda ()
+                  (interactive)
+                  (join-line -1)))
+
+
+; start a command and wait, then this will show the completions available:
+(use-package which-key
+  ;;:defer nil
+  :diminish
+  :init
+  (which-key-mode)
+  ;; :config
+  ;; (setq which-key-idle-delay 0.2)
+  )
+
+
+
+;;
+;; 30 search
+;;
+
 ;; display a counter showing the number of the current and the total
 ;; matches. Place it before the prompt.
 (setq isearch-lazy-count t)
 (setq lazy-count-prefix-format "(%s/%s) ")
 (setq lazy-count-suffix-format nil)
 ;; see the preceding and following lines around a match
-(setq list-matching-lines-default-context-lines 2)
+(setq list-matching-lines-default-context-line 0)
 
-;; TODO Treesitter
-;; https://youtu.be/MZPR_SC9LzE
-
-
-;; emoji support
-(use-package emojify
-  :hook
-  (after-init . global-emojify-mode)
-  )
 
 (use-package ido
   :ensure t
@@ -164,268 +382,12 @@
 
 
 ;; ivy, counsel, swiper
+;; ivy-rich 
 
 
-;; M-x world-clock
-(setq display-time-world-list
-  '(("Etc/UTC" "UTC")
-    ("Europe/Paris" "Paris")
-    ("America/Montreal" "Montreal") 
-    ("Asia/Shanghai" "Chengdu")
-    ("America/Los_Angeles" "San Francisco")
-    ))
-;;(setq display-time-world-time-format "%a, %d %b %I:%M %p %Z")
-
-
-
-
-
-(use-package csv-mode
-  :mode
-  ("\\.csv\\'" . csv-mode)
-  :init
-  ;; font-lock makes large files very sluggish
-  (add-hook 'csv-mode-hook (lambda () (font-lock-mode -1)))
-  ;; only apply to large files
-  ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
-  :config
-  (setq csv-align-max-width 7)
-  (setq csv-separators '("," "\t" ";"))
-  (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
-
-
-;; highlight current line
-(when window-system (add-hook 'prog-mode-hook 'hl-line-mode))
-
-;; yaml mode
-(use-package yaml-mode
-  :mode "\\.yml\\'")
-
-;; markdown mode
-(use-package markdown-mode
-  :commands (markdown-mode gfm-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode))
-  :hook (markdown-mode . auto-fill-mode)
-  ;; :bind ( :map markdown-mode-map
-  ;;         ("M-Q" . split-pararagraph-into-lines))
-  :custom-face (markdown-code-face ((t (:inherit org-block)))))
-
-;; adoc-mode
-(use-package adoc-mode
-  :mode "\\.\\(adoc\\|asciidoc\\)\\'"
-  :hook
-  (adoc-mode . visual-line-mode)
-					;(adoc-mode . variable-pitch-mode)
-  )
-
-; https://stackoverflow.com/questions/12756531/using-the-current-buffers-file-name-in-m-x-compile 
-(add-hook 'adoc-mode-hook
-          (lambda ()
-            (set (make-local-variable 'compile-command)
-		 (concat "asciidoctor " (shell-quote-argument buffer-file-name))
-                 )))
-
-;; quarto are the next-gen data science markdowns
-(use-package quarto-mode
-  :mode
-  (("\\.Rmd" . poly-quarto-mode))
-  )
-
-
-
-(use-package multiple-cursors
-  :ensure t
-  :bind (("M-." . mc/mark-next-like-this)
-         ("M-," . mc/unmark-next-like-this)
-         ("C-S-<mouse-1>" . mc/add-cursor-on-click)
-         ("C-c m c" . mc/edit-lines)))
-
-
-;; also check out this for more: https://protesilaos.com/codelog/2020-07-16-emacs-focused-editing/
-
-;; Distraction-free screen
-(use-package olivetti
-  :init
-  (setq olivetti-body-width .67)
-  :config
-  (defun distraction-free ()
-    "Distraction-free writing environment"
-    (interactive)
-    (if (equal olivetti-mode nil)
-        (progn
-          (window-configuration-to-register 1)
-          (delete-other-windows)
-          (text-scale-increase 2)
-          (olivetti-mode t))
-      (progn
-        (jump-to-register 1)
-        (olivetti-mode 0)
-        (text-scale-decrease 2))))
-  :bind (("C-<f9>" . distraction-free)
-	 ("<f9>" . olivetti-mode)))
-
-
-;; uniquify package
-
-(use-package yasnippet
-  :config
-  (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-  (yas-global-mode 1)
-  )
-
-;; unfill (opposite of fill)					
-(use-package unfill
-  ;; rebind M-q to toogle fill/unfill
-  :bind ([remap fill-paragraph] . unfill-toggle))
-
-
-;; expand semantically depending on mode/region
-(use-package expand-region
-  :bind (("C-c x r" . er/expand-region)
-	 ("C-c x q" . er/mark-inside-quotes)
-	 ("C-c x w" . er/mark-outside-quotes)
-	 ("C-c x p" . er/mark-inside-pairs)
-	 ))
-
-;; (custom-set-variables
-;;   ; put all backups to this dir: ~/.emacs.d/backups/
-;;  '(backup-directory-alist `(("." \, (concat user-emacs-directory "backups"))))
-;; )
-
-;; put all backups (~ files) in a backup dir
-(setq backup-directory-alist '(("." . "~/.emacs.d/backups"))
-      backup-by-copying t    ; Don't delink hardlinks
-      version-control t      ; Use version numbers on backups
-      delete-old-versions t  ; Automatically delete excess backups
-      kept-new-versions 20   ; how many of the newest versions to keep
-      kept-old-versions 5    ; and how many of the old
-      )
-
-;; set default encoding
-(set-language-environment "UTF-8")
-(prefer-coding-system       'utf-8)
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(setq default-buffer-file-coding-system 'utf-8)
-
-;; proxy woes
-(defun safferli/set-proxy ()
-  (interactive)
-  (customize-set-variable 'url-proxy-services
-                          '(("http"  . "proxy.ubisoft.org:3218")
-                            ("https" . "proxy.ubisoft.org:3218"))))
-(defun safferli/unset-proxy ()
-  (interactive)
-  (customize-set-variable 'url-proxy-services nil))
-
-
-;; line numbers from emacs-26 onwards
-(use-package display-line-numbers
-    :defer nil
-    :ensure nil
-    :config
-    (global-display-line-numbers-mode))
-
-; start a command and wait, then this will show the completions available:
-(use-package which-key
-  ;;:defer nil
-  :diminish
-  :init
-  (which-key-mode)
-  ;; :config
-  ;; (setq which-key-idle-delay 0.2)
-  )
-;  (add-hook 'after-init-hook 'which-key-mode))
-
-; avy should be amazing(?)
-; https://github.com/abo-abo/avy
-
-; hex colour code will be highlighted in the corresponding colour
-(use-package rainbow-mode
-  ;;:delight
-  :diminish
-  :hook ((prog-mode text-mode) . rainbow-mode))
-
-
-;; highlight matching parens (ensure nil, because this is a core package)
-(use-package paren
-  :ensure nil
-  :init
-  (setq show-paren-delay 0)
-  :config
-  (setq show-paren-style 'mixed)
-  (show-paren-mode +1))
-
-;; parenthetical editing in emacs
-;; (use-package paredit
-;;   :init
-;;   (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
-;;   :config
-;;   (show-paren-mode t)
-;;   ) 
-
-
-;; this has a lot of examples:
-;; https://ebzzry.com/en/emacs-pairs/#installation
-(use-package smartparens
-  :init
-  :hook
-  (prog-mode . smartparens-mode)
-  (emacs-lisp-mode . smartparens-strict-mode)
-  :config
-  (progn
-    ;; load defaults
-    (require 'smartparens-config)
-    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-    (setq sp-show-pair-from-inside nil)
-    )
-  ;; :diminish smartparens-mode
-  :custom-face
-  (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
-  )
-
-;; TODO LSP mode https://emacs-lsp.github.io/lsp-mode/
-;; TODO Rust mode https://robert.kra.hn/posts/rust-emacs-setup/
-
-
-
-
-
-;; colour-code delimiter depth
-(use-package rainbow-delimiters
-  :defer nil
-  :config
-  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-
-;; flycheck
-;;(use-package flycheck
-;;  :ensure t)
-
-
-
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode +1)
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/github")
-    (setq projectile-project-search-path '("~/github")))
-  (setq projectile-switch-project-action #'projectile-dired)
-  :bind (:map projectile-mode-map
-	      ;; ("s-p" . projectile-command-map)
-              ("C-c p" . projectile-command-map))
-  )
-
-;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; spelling                                                               ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; 31 spelling
+;;
 
 ;; ;; tell ispell that apostrophes are part of words
 ;; ;; and select Bristish dictionary
@@ -485,40 +447,130 @@
   (flyspell-buffer))
 
 
-;; opens a macOS X finder in the current folder 
-(use-package reveal-in-osx-finder
-  :bind
-  ("C-c f" . reveal-in-osx-finder)) 
+;;
+;; 35 text editing
+;; 
+
+(use-package multiple-cursors
+  :ensure t
+  :bind (("M-." . mc/mark-next-like-this)
+         ("M-," . mc/unmark-next-like-this)
+         ("C-S-<mouse-1>" . mc/add-cursor-on-click)
+         ("C-c m c" . mc/edit-lines)))
 
 
-
-;; magit - git
-(use-package magit
+(use-package yasnippet
   :config
-  (setq magit-push-always-verify nil)
-  (setq git-commit-summary-max-length 50)
-  :bind
-  ("M-g" . magit-status))
+  ;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+  (setq-default yas-snippet-dirs `(,(expand-file-name "snippets/" user-emacs-directory)))
+  (yes-reload-all)
+  (yas-global-mode 1)
+  )
 
-;; make file executable if first line has shebang
-(add-hook 'after-save-hook
-          'executable-make-buffer-file-executable-if-script-p)
+;; unfill (opposite of fill)					
+(use-package unfill
+  ;; rebind M-q to toogle fill/unfill
+  :bind ([remap fill-paragraph] . unfill-toggle))
 
-;; remove toolbar
-(if window-system
-    (tool-bar-mode -1)
-    )
 
-;; zenburn theme
-(use-package zenburn-theme
-  :defer nil
+;; expand semantically depending on mode/region
+(use-package expand-region
+  :bind (("C-c x r" . er/expand-region)
+	 ("C-c x q" . er/mark-inside-quotes)
+	 ("C-c x w" . er/mark-outside-quotes)
+	 ("C-c x p" . er/mark-inside-pairs)
+	 ))
+
+
+;; also check out this for more: https://protesilaos.com/codelog/2020-07-16-emacs-focused-editing/
+
+;; Distraction-free screen
+(use-package olivetti
+  :init
+  (setq olivetti-body-width .67)
   :config
-  (load-theme 'zenburn t))
+  (defun distraction-free ()
+    "Distraction-free writing environment"
+    (interactive)
+    (if (equal olivetti-mode nil)
+        (progn
+          (window-configuration-to-register 1)
+          (delete-other-windows)
+          (text-scale-increase 2)
+          (olivetti-mode t))
+      (progn
+        (jump-to-register 1)
+        (olivetti-mode 0)
+        (text-scale-decrease 2))))
+  :bind (("C-<f9>" . distraction-free)
+	 ("<f9>" . olivetti-mode)))
 
-;; LaTeX - AucTeX
+
+(use-package mw-thesaurus
+  :config
+  ;; open in right
+  (add-to-list 'display-buffer-alist
+   `(,mw-thesaurus-buffer-name
+     (display-buffer-reuse-window
+      display-buffer-in-direction)
+     (direction . right)
+     (window . root)
+     (window-width . 0.3)))
+  ;; :hook
+  ;; (mw-thesaurus-mode . variable-pitch-mode)
+  :bind
+  ("C-c t" . mw-thesaurus-lookup-dwim)
+  )
+
+
+
+;;
+;; 50 Text buffers
+;;
+
+;;
+;; 51 Markdown mode
+;;
+
+;; markdown mode
+(use-package markdown-mode
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :hook (markdown-mode . auto-fill-mode)
+  ;; :bind ( :map markdown-mode-map
+  ;;         ("M-Q" . split-pararagraph-into-lines))
+  :custom-face (markdown-code-face ((t (:inherit org-block)))))
+
+
+;;
+;; 52 ASCIIdoc mode
+;;
+
+;; adoc-mode
+(use-package adoc-mode
+  :mode "\\.\\(adoc\\|asciidoc\\)\\'"
+  :hook
+  (adoc-mode . visual-line-mode)
+					;(adoc-mode . variable-pitch-mode)
+  )
+
+; https://stackoverflow.com/questions/12756531/using-the-current-buffers-file-name-in-m-x-compile 
+(add-hook 'adoc-mode-hook
+          (lambda ()
+            (set (make-local-variable 'compile-command)
+		 (concat "asciidoctor " (shell-quote-argument buffer-file-name))
+                 )))
+
+
+;;
+;; 53 LaTeX
+;;
+
 (use-package latex
   :defer t 
-  :ensure auctex
+  :ensure auctex; since package and use-package use different name
   :mode ("\\.tex\\'" . TeX-latex-mode)
   :init
   (setq reftex-plug-into-AUCTeX t)
@@ -535,54 +587,109 @@
 ;; try this sometime: https://www.gnu.org/software/auctex/manual/auctex/Control.html
 
 
-;; not all modes do this
-(global-set-key "\C-c;" 'comment-region)
-(global-set-key "\C-c:" 'uncomment-region)
-;; quick way to get to top/bottom
-(global-set-key [home] 'beginning-of-buffer) 
-(global-set-key [end]  'end-of-buffer) 
 
-;; https://pragmaticemacs.wordpress.com/category/editing/ 
-(defun safferli/align-whitespace (start end)
-  "Align columns by whitespace"
-  (interactive "r")
-  (align-regexp start end
-                "\\(\\s-*\\)\\s-" 1 0 t))
+;;
+;; 54 Obsidian 
+;;
 
-(defun safferli/align-ampersand (start end)
-  "Align columns by ampersand"
-  (interactive "r")
-  (align-regexp start end
-                "\\(\\s-*\\)&" 1 1 t))
-
-;; join line to next line
-(global-set-key (kbd "C-j")
-            (lambda ()
-                  (interactive)
-                  (join-line -1)))
-
-; https://camdez.com/blog/2013/11/14/emacs-show-buffer-file-name/
-(defun safferli/show-buffer-file-name ()
-  "Show the full path to the current file in the minibuffer and copy it to the kill ring."
-  (interactive)
-  (let ((file-name (buffer-file-name)))
-    (if file-name
-        (progn
-          (message file-name)
-          (kill-new file-name))
-      (error "Buffer not visiting a file"))))
+;; (use-package obsidian
+;;   :ensure t
+;;   :demand t
+;;   :config
+;;   (obsidian-specify-path "~/Onedrive/Documents/obsidian-notes/")
+;;   (global-obsidian-mode t)
+;;   :custom
+;;   ;; This directory will be used for `obsidian-capture' if set.
+;;   (obsidian-inbox-directory "001 Zettelkasten")
+;;   :bind (:map obsidian-mode-map
+;;   ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
+;;   ("C-c C-o" . obsidian-follow-link-at-point)
+;;   ;; Jump to backlinks
+;;   ("C-c C-b" . obsidian-backlink-jump)
+;;   ;; If you prefer you can use `obsidian-insert-link'
+;;   ("C-c C-l" . obsidian-insert-wikilink)))
 
 
 
 
-;; remove auto-updated custom-set-variables
-;; https://www.reddit.com/r/emacs/comments/4x655n/packageselectedpackages_always_appear_after/
-(setq custom-file "~/.emacs.d/package-selected-packages.el")
-(load custom-file)
 
-;; "open with" in the original frame, not a new one 
-;; https://superuser.com/questions/277755/emacs-opens-files-in-a-new-frame-when-opened-with-open-a
-(setq ns-pop-up-frames nil)
+
+
+
+
+
+
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/github")
+    (setq projectile-project-search-path '("~/github")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind (:map projectile-mode-map
+	      ;; ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map))
+  )
+
+;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
+
+
+
+
+
+
+;; TODO compile magic: https://emacs.stackexchange.com/questions/31493/print-elapsed-time-in-compilation-buffer/56130#56130
+;; (defun tkj/goto-compilation()
+;;   (interactive)
+;;   (switch-to-buffer
+;;    (get-buffer-create "*compilation*")))
+;; (global-set-key (kbd "C-c c") 'tkj/goto-compilation)
+
+
+;; TODO jira
+;; (defun tkj/jira-key-at-point-to-link-on-kill-ring()
+;;   "Creates a Jira link out of the issue key at point. The function
+;; then inserts it into your kill ring so you can paste/yank it
+;; where you need it."
+;;   (interactive)
+;;   (let ((issue (thing-at-point 'filename 'no-properties)))
+;;     (kill-new (concat "https://jira.stibodx.com/browse/" issue))))
+
+;; ;; Open Jira issue references in the browser
+;; (setq bug-reference-bug-regexp "\\b\\(\\([A-Za-z][A-Za-z0-9]\\{1,10\\}-[0-9]+\\)\\)"
+;;       bug-reference-url-format "https://jira.stibodx.com/browse/%s")
+;; (add-hook 'org-mode-hook 'bug-reference-mode)
+
+
+
+
+;; magit - git
+(use-package magit
+  :config
+  (setq magit-push-always-verify nil)
+  (setq git-commit-summary-max-length 50)
+  :bind
+  ("M-g" . magit-status))
+
+;; make file executable if first line has shebang
+(add-hook 'after-save-hook
+          'executable-make-buffer-file-executable-if-script-p)
+
+
+;; expands at point to useful things
+(global-set-key "\M- " 'hippie-expand)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -633,3 +740,191 @@
 ;;          (round (floor n)))
 ;;     ;; FIXME 2021-12-21: Any way to avoid the `string-to-number'?
 ;;     (if (> n round) (string-to-number (format "%0.4f" n)) round)))
+
+
+;; ;; mac specific stuff
+;; (setq mac-option-modifier 'meta)
+;; (setq mac-command-modifier 'hyper)
+
+
+;; (defun mac-switch-meta nil
+;;   "switch meta between Option and Command"
+;;   (interactive)
+;;   (if (eq mac-option-modifier nil)
+;;       (progn
+;;         (setq mac-option-modifier 'meta
+;;               mac-command-modifier 'hyper))
+;;     (progn
+;;       (setq mac-option-modifier nil
+;;             mac-command-modifier 'meta))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;; TODO Treesitter
+;; https://youtu.be/MZPR_SC9LzE
+
+;; (use-package treemacs-icons-dired
+;;   :after treemacs dired
+;;   :ensure t
+;;   :config (treemacs-icons-dired-mode))
+
+
+;;
+;; 60 Programming modes
+;;
+
+;; hex colour code will be highlighted in the corresponding colour
+(use-package rainbow-mode
+  ;;:delight
+  :diminish
+  :hook ((prog-mode text-mode) . rainbow-mode))
+
+
+;; colour-code delimiter/parens depth
+(use-package rainbow-delimiters
+  :defer nil
+  :config
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+
+
+;; highlight matching parens (ensure nil, because this is a core package)
+(use-package paren
+  :ensure nil
+  :init
+  (setq show-paren-delay 0)
+  :config
+  (setq show-paren-style 'mixed)
+  (show-paren-mode +1))
+
+
+;; this has a lot of examples:
+;; https://ebzzry.com/en/emacs-pairs/#installation
+(use-package smartparens
+  :init
+  :hook
+  (prog-mode . smartparens-mode)
+  (emacs-lisp-mode . smartparens-strict-mode)
+  :config
+  (progn
+    ;; load defaults
+    (require 'smartparens-config)
+    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+    (setq sp-show-pair-from-inside nil)
+    )
+  ;; :diminish smartparens-mode
+  :custom-face
+  (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
+  )
+
+
+;; yaml mode
+(use-package yaml-mode
+  :mode "\\.yml\\'")
+
+
+;; lua mode 
+(use-package lua-mode
+  :defer t)
+
+
+;;(use-package flycheck
+;;  :ensure t)
+
+
+;;
+;; 61 Rust
+;;
+
+;; https://robert.kra.hn/posts/rust-emacs-setup/
+
+;;
+;; 70 Statistics and Data Science
+;;
+
+;;
+;; 71 csv mode
+;;
+
+(use-package csv-mode
+  :mode
+  ("\\.csv\\'" . csv-mode)
+  :init
+  ;; font-lock makes large files very sluggish
+  (add-hook 'csv-mode-hook (lambda () (font-lock-mode -1)))
+  ;; only apply to large files
+  ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
+  :config
+  (setq csv-align-max-width 7)
+  (setq csv-separators '("," "\t" ";"))
+  (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
+
+;;
+;; 72 quarto
+;;
+
+;; quarto are the next-gen data science markdowns
+(use-package quarto-mode
+  :mode
+  (("\\.Rmd" . poly-quarto-mode))
+  )
+
+;;
+;; 73 ESS
+;;
+
+;;
+;; 80 LSPs
+;;
+
+;; https://emacs-lsp.github.io/lsp-mode/
+
+
+;;
+;; 90 ORG mode 
+;;
+
+;; https://github.com/abo-abo/org-download
+;; org-cite?
+;; Org-roam "A plain-text personal knowledge management system."
+;; https://github.com/kot-behemoth/awesome-org-roam
+;; https://github.com/org-roam/org-roam-ui
+;; https://orgmode.org/worg/org-contrib/babel/uses.html
+;; https://github.com/wdavew/org-excalidraw/
+;; https://systemcrafters.net/build-a-second-brain-in-emacs/getting-started-with-org-roam/ 
+;; (use-package org-roam
+;;   :ensure t
+;;   :init
+;;   (setq org-roam-v2-ack t)
+;;   :custom
+;;   (org-roam-directory "~/RoamNotes")
+;;   (org-roam-completion-everywhere t)
+;;   :bind (("C-c n l" . org-roam-buffer-toggle)
+;;          ("C-c n f" . org-roam-node-find)
+;;          ("C-c n i" . org-roam-node-insert)
+;;          :map org-mode-map
+;;          ("C-M-i"    . completion-at-point))
+;;   :config
+;;   (org-roam-setup))
+
+
+
+;;
+;; 99 notes
+;;
+
+;; how to bind keys to different modes
+;; :bind (("C-c a" . org-agenda)
+;;        ("<f6>"  . org-capture)
+;;        :map org-mode-map
+;;        ("<M-S-return>" . org-insert-subheading))

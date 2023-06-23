@@ -1,0 +1,17 @@
+[user]
+	name = Christoph Safferling
+	email = christoph.safferling@ubisoft.com
+[gui]
+[core]
+	autocrlf = true
+	excludesfile = ~/.gitignore_global
+[http]
+#	proxy = christoph.safferling:Chr1313Saf@proxy.ubisoft.org:3128
+#	proxy = 10.26.0.19:3128
+#	proxy = proxy.ubisoft.org:3128
+[https]
+#	proxy = christoph.safferling:Chr1313Saf@proxy.ubisoft.org:3128
+#	proxy = 10.26.0.19:3128
+#	proxy = proxy.ubisoft.org:3128
+[merge]
+    conflictstyle = diff3
