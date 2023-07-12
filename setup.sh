@@ -59,6 +59,11 @@ brew install --cask emacs-mac
 #touch /Applications/Emacs.app
 
 
+## we can probably automate settings?
+## https://apple.stackexchange.com/questions/198257/how-can-i-script-the-setup-of-preferences-in-mac-os-x
+## http://www.defaults-write.com/
+## https://www.shell-tips.com/mac/defaults/#gsc.tab=0
+## also check this: https://github.com/mathiasbynens/dotfiles/blob/master/.macos
 
 
 

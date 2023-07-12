@@ -4,9 +4,8 @@
 
 (occur "^;; [0-9]+")
 
-
 ;;
-;; 01 Package management
+;; 01 package management
 ;; 
 
 ;; https://ianyepan.github.io/posts/setting-up-use-package/
@@ -37,7 +36,7 @@
 (setq use-package-compute-statistics t)
 
 ;;
-;; 02 Name and Email
+;; 02 name and email
 ;;
 
 (setq user-full-name "Christoph Safferling")
@@ -45,7 +44,7 @@
 
 
 ;;
-;; 10 Appearance
+;; 10 appearance
 ;;
 
 ;; "open with" in the original frame, not a new one 
@@ -73,6 +72,11 @@
 (use-package all-the-icons
   :if (display-graphic-p))
 
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :config
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+
 
 ;; emoji support
 (use-package emojify
@@ -80,37 +84,40 @@
   )
 
 
-;; zenburn theme
-(use-package zenburn-theme
-  :defer nil
-  :config
-  (load-theme 'zenburn t))
-
-
-;; modeline -- should at some point just pull out what I want
-(use-package doom-modeline
-  :defer nil
-  :config
-  (setq doom-modeline-minor-modes t)
-  (setq doom-modeline-enable-word-count t)
-  (setq doom-modeline-unicode-fallback t)
-  ;; this is not doom-modeline specific
-  (setq column-number-mode t)
-  :hook
-  (after-init . doom-modeline-mode))
-
-
 ;; titlebar with full path to buffer (%f)
 (setq-default frame-title-format "%b (%f)")
 
 
 ;; highlight current line
-(when window-system (add-hook 'prog-mode-hook 'hl-line-mode))
+(when window-system (add-hook 'prog-mode-hook #'hl-line-mode))
 
 ;; remove toolbar
 (if window-system
     (tool-bar-mode -1)
   )
+
+
+;; Give a pulse light when switching windows, or switching focus to
+;; the minibuffer.
+(require 'pulse)
+(set-face-attribute 'pulse-highlight-start-face nil :background "#49505f")
+(add-hook 'window-selection-change-functions
+          (lambda (frame)
+            (when (eq frame (selected-frame))
+              (pulse-momentary-highlight-one-line))))
+
+;; (use-package pulse
+;;   ;; Highlight cursor postion after movement
+;;   :unless my/is-terminal
+;;   :defer t
+;;   :init (defun pulse-line (&rest _)
+;;           (pulse-momentary-highlight-one-line (point)))
+;;   (dolist (command '(other-window
+;;                      windmove-do-window-select
+;;                      mouse-set-point
+;;                      mouse-select-window))
+;;     (advice-add command :after #'pulse-line)))
+
 
 
 ;; size and position on initial open
@@ -145,6 +152,45 @@
 
 
 ;;
+;; 11 themes
+;;
+
+;; zenburn theme
+(use-package zenburn-theme
+  :defer nil
+  :config
+  (load-theme 'zenburn t))
+
+
+;;
+;; 12 modeline
+;; 
+
+;; modeline -- should at some point just pull out what I want
+(setq column-number-mode t)
+(setq inhibit-compacting-font-caches t)
+
+(use-package doom-modeline
+  :defer nil
+  :config
+  (setq doom-modeline-minor-modes t)
+  (setq doom-modeline-enable-word-count t)
+  (setq doom-modeline-unicode-fallback t)
+  (setq doom-modeline-height 25)
+  :hook
+  (after-init . doom-modeline-mode))
+
+;; TODO un-doomify
+;; https://amitp.blogspot.com/2011/08/emacs-custom-mode-line.html
+;; https://github.com/Gavinok/emacs.d/blob/main/lisp/modeline.el
+;; master branch now (2023-04-01) has this:
+;; Modeline elements can now be right-aligned. Anything following the
+;; symbol 'mode-line-format-right-align' in 'mode-line-format' will be
+;; right-aligned. Exactly where it is right-aligned to is controlled
+;; by the new user option 'mode-line-right-align-edge'.
+
+
+;;
 ;; 20 my functions
 ;;
 
@@ -174,6 +220,7 @@
   (interactive)
   (let (( time (current-time-string) ))
     (insert (format-time-string "%Y-%m-%d"))))
+(global-set-key (kbd "C-c i d") 'safferli/insert-date)
 
 
 ;; none of these currently work because of IT restrictions
@@ -184,14 +231,11 @@
   (do-applescript "tell application \"Microsoft Edge\" to return Title of active tab of front window"))
 
 (defun safferli/get-current-url-firefox ()
-  (do-applescript "tell application \"Firefox\" to activate
-                   tell application \"System Events\"
-	              keystroke \"l\" using command down
-	              keystroke \"c\" using command down
-	              key code 53 -- esc key
-                   end tell
-                   delay 0.1
-                   return the clipboard"))
+  (do-applescript "tell application \"Firefox\" to activate tell
+                   application \"System Events\" keystroke \"l\" using
+                   command down keystroke \"c\" using command down key
+                   code 53 -- esc key end tell delay 0.1 return the
+                   clipboard"))
 
 ;; tell application "System Events" to tell process "Firefox"
 ;; 	set frontmost to true
@@ -297,6 +341,7 @@
   :bind
   ("C-c f" . reveal-in-osx-finder)) 
 
+
 ;; Navigate between visible buffers (windows in emacs speak) (thanks skybert)
 (defun safferli/other-window-backward (&optional n)
   (interactive "p")
@@ -306,16 +351,11 @@
 (global-set-key "\C-x\C-n" 'other-window)
 (global-set-key "\C-x\C-p" 'safferli/other-window-backward)
 
-;; Give a pulse light when switching windows, or switching focus to
-;; the minibuffer.
-(require 'pulse)
-(set-face-attribute 'pulse-highlight-start-face nil :background "#49505f")
-(add-hook 'window-selection-change-functions
-          (lambda (frame)
-            (when (eq frame (selected-frame))
-              (pulse-momentary-highlight-one-line))))
 
+;; reload dired buffers
+(setq dired-auto-revert-buffer t)
 ;; reload if files have changed on disk
+(setq global-auto-revert-non-file-buffers t)
 (global-auto-revert-mode 1)
 
 
@@ -343,6 +383,26 @@
   )
 
 
+;; working with buffers
+;; https://www.youtube.com/watch?v=Hql1ySbTGbE
+;; remove emacs-internal buffers from buffer screen
+(set-frame-parameter (selected-frame) 'buffer-predicate
+                     (lambda (buf) 
+                       (let ((name (buffer-name buf)))
+                         (not (or (string-prefix-p "*" name)
+                                  (eq 'dired-mode (buffer-local-value 'major-mode buf)))))))
+
+(global-set-key (kbd "C-`") 'mode-line-other-buffer)
+(global-set-key (kbd "C-1") 'kill-this-buffer)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
+
+;;
+;; 29 fun stuff
+;;
+
+(use-package dad-joke)
+
 
 ;;
 ;; 30 search
@@ -355,6 +415,20 @@
 (setq lazy-count-suffix-format nil)
 ;; see the preceding and following lines around a match
 (setq list-matching-lines-default-context-line 0)
+
+;; search defaults to selected region
+;; https://stackoverflow.com/questions/202803/searching-for-marked-selected-text-in-emacs
+(defun safferli/isearch-with-region ()
+  "Use region as the isearch text."
+  (when mark-active
+    (let ((region (funcall region-extract-function nil)))
+      ;; start at the beginning to get this occurrence to show up as first  
+      (goto-char (region-beginning))
+      (deactivate-mark)
+      (isearch-update)
+      (isearch-yank-string region))))
+
+(add-hook 'isearch-mode-hook #'safferli/isearch-with-region)
 
 
 (use-package ido
@@ -449,23 +523,21 @@
 
 ;;
 ;; 35 text editing
-;; 
+;;
+
+;; relics of the olden days...
+(setq sentence-end-double-space t)
+;; I actually like the default (nil):
+; (setq delete-selection-mode t)
+
 
 (use-package multiple-cursors
   :ensure t
-  :bind (("M-." . mc/mark-next-like-this)
-         ("M-," . mc/unmark-next-like-this)
+  :bind (("C-c m ." . mc/mark-next-like-this)
+         ("C-c m ," . mc/unmark-next-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)
-         ("C-c m c" . mc/edit-lines)))
+         ("C-c m e" . mc/edit-lines)))
 
-
-(use-package yasnippet
-  :config
-  ;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-  (setq-default yas-snippet-dirs `(,(expand-file-name "snippets/" user-emacs-directory)))
-  (yes-reload-all)
-  (yas-global-mode 1)
-  )
 
 ;; unfill (opposite of fill)					
 (use-package unfill
@@ -497,11 +569,16 @@
           (window-configuration-to-register 1)
           (delete-other-windows)
           (text-scale-increase 2)
+	  ;; fake center-cursor-mode:
+	  ;; center cursor and then activate scroll-lock-mode 
+	  (recenter-top-bottom)
+	  (scroll-lock-mode 1)
           (olivetti-mode t))
-      (progn
-        (jump-to-register 1)
-        (olivetti-mode 0)
-        (text-scale-decrease 2))))
+        (progn
+          (jump-to-register 1)
+	  (scroll-lock-mode 0)
+          (olivetti-mode 0)
+          (text-scale-decrease 2))))
   :bind (("C-<f9>" . distraction-free)
 	 ("<f9>" . olivetti-mode)))
 
@@ -523,13 +600,69 @@
   )
 
 
+;; ;; do I reallky wont this? 
+;; (use-package puni
+;;   :defer t
+;;   :hook ((prog-mode sgml-mode) . puni-mode))
+
+;; ace-window for window management
+;; https://github.com/abo-abo/ace-window
+
 
 ;;
-;; 50 Text buffers
+;; 40 productivity
+;;
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/github")
+    (setq projectile-project-search-path '("~/github")))
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind (:map projectile-mode-map
+	      ;; ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map))
+  )
+
+;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
+
+
+(use-package yasnippet
+  :config
+  ;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+  (setq-default yas-snippet-dirs `(,(expand-file-name "snippets/" user-emacs-directory)))
+  (yes-reload-all)
+  (yas-global-mode 1)
+  )
+
+
+;; https://github.com/Wilfred/helpful
+;; (helpful-at-point)
+
+;; https://ianyepan.github.io/posts/emacs-git-gutter/
+;; or use this? https://github.com/dgutov/diff-hl
+
+
+;;
+;; 45 translation
+;;
+
+;; https://commission.europa.eu/resources-partners/etranslation_en
+;; https://github.com/lorniu/go-translate
+;; https://github.com/mtenders/emacs-leo
+;; improved version: https://codeberg.org/martianh/emacs-leo
+
+
+
+
+;;
+;; 50 text buffers
 ;;
 
 ;;
-;; 51 Markdown mode
+;; 51 markdown mode
 ;;
 
 ;; markdown mode
@@ -563,6 +696,25 @@
 		 (concat "asciidoctor " (shell-quote-argument buffer-file-name))
                  )))
 
+;; https://hyperscope.link/3/7/1/5/8/Convenient-Emacs-Lisp-functions-for-Asciidoctor-37158.html
+(defvar rcd-asciidoctor-admonition-history nil)
+
+(defun rcd-asciidoctor-admonition ()
+  "Interactively enter Asciidoctor admonition.
+Use prefix key to enter admonition block."
+  (interactive)
+  (let* ((admonitions '("NOTE" "TIP" "IMPORTANT" "CAUTION" "WARNING"))
+	 (completion-ignore-case t)
+	 (admonition (completing-read "Choose admonition: " admonitions nil t nil 'rcd-asciidoctor-admonition-history)))
+    (if current-prefix-arg
+	(progn
+	  (insert (format "[%s]\n.%s\n====\n\n====\n\n" admonition
+			  (read-from-minibuffer "Title: ")))
+	  (previous-line 3))
+      (insert (format "%s: " admonition)))))
+
+
+
 
 ;;
 ;; 53 LaTeX
@@ -592,48 +744,22 @@
 ;; 54 Obsidian 
 ;;
 
-;; (use-package obsidian
-;;   :ensure t
-;;   :demand t
-;;   :config
-;;   (obsidian-specify-path "~/Onedrive/Documents/obsidian-notes/")
-;;   (global-obsidian-mode t)
-;;   :custom
-;;   ;; This directory will be used for `obsidian-capture' if set.
-;;   (obsidian-inbox-directory "001 Zettelkasten")
-;;   :bind (:map obsidian-mode-map
-;;   ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
-;;   ("C-c C-o" . obsidian-follow-link-at-point)
-;;   ;; Jump to backlinks
-;;   ("C-c C-b" . obsidian-backlink-jump)
-;;   ;; If you prefer you can use `obsidian-insert-link'
-;;   ("C-c C-l" . obsidian-insert-wikilink)))
+(use-package obsidian
+  :demand t
+  :config
+  (obsidian-specify-path "~/Onedrive - Ubisoft/obsidian-notes/")
+  (global-obsidian-mode t)
+  :custom
+  ;; This directory will be used for `obsidian-capture' if set.
+  (obsidian-inbox-directory "001 Zettelkasten")
+  :bind (:map obsidian-mode-map
+  ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
+  ("C-c C-o" . obsidian-follow-link-at-point)
+  ;; Jump to backlinks
+  ("C-c C-b" . obsidian-backlink-jump)
+  ;; If you prefer you can use `obsidian-insert-link'
+  ("C-c C-l" . obsidian-insert-wikilink)))
 
-
-
-
-
-
-
-
-
-
-
-
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode +1)
-  ;; NOTE: Set this to the folder where you keep your Git repos!
-  (when (file-directory-p "~/github")
-    (setq projectile-project-search-path '("~/github")))
-  (setq projectile-switch-project-action #'projectile-dired)
-  :bind (:map projectile-mode-map
-	      ;; ("s-p" . projectile-command-map)
-              ("C-c p" . projectile-command-map))
-  )
-
-;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
 
 
 
@@ -683,28 +809,187 @@
 
 
 
+;;
+;; 60 programming modes
+;;
+
+;; hex colour code will be highlighted in the corresponding colour
+(use-package rainbow-mode
+  ;;:delight
+  :diminish
+  :hook ((prog-mode text-mode) . rainbow-mode))
 
 
+;; colour-code delimiter/parens depth
+(use-package rainbow-delimiters
+  :defer nil
+  :config
+  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+
+;; colour highlight everything
+;; https://github.com/alphapapa/prism.el 
 
 
+;; highlight matching parens (ensure nil, because this is a core package)
+(use-package paren
+  :ensure nil
+  :init
+  (setq show-paren-delay 0)
+  :config
+  (setq show-paren-style 'mixed)
+  (show-paren-mode +1))
 
 
+;; this has a lot of examples:
+;; https://ebzzry.com/en/emacs-pairs/#installation
+(use-package smartparens
+  :init
+  :hook
+  (prog-mode . smartparens-mode)
+  (emacs-lisp-mode . smartparens-strict-mode)
+  :config
+  (progn
+    ;; load defaults
+    (require 'smartparens-config)
+    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+    (setq sp-show-pair-from-inside nil)
+    )
+  ;; :diminish smartparens-mode
+  :custom-face
+  (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
+  )
 
 
+;; yaml mode
+(use-package yaml-mode
+  :mode "\\.yml\\'")
 
 
+;; lua mode 
+(use-package lua-mode)
 
 
+;; Paradox games
+(add-to-list 'load-path "~/.emacs.d/my-packages/paradox.el")
+(require 'paradox)
+;; Spellchecking in comments and strings
+(add-hook 'paradox-mode-hook 'flyspell-prog-mode)
+
+(use-package company)
 
 
-;; misc topics
-
-;; If you use M-! (shell-command) and then press M-n
-;; (next-history-element), the current file name will be inserted into
-;; the minibuffer with point before it. Then you just need to type the
-;; command you want to run and hit return.
+;;(use-package flycheck
+;;  :ensure t)
 
 
+;;
+;; 61 Python
+;;
+
+;; http://www.skybert.net/emacs/programming-python-in-emacs-2015/
+;; is there a more modern setup by now?
+;; https://realpython.com/emacs-the-best-python-editor/
+
+
+;;
+;; 62 Rust
+;;
+
+;; https://robert.kra.hn/posts/rust-emacs-setup/
+
+;;
+;; Rust
+;;
+
+;; gavinok https://github.com/Gavinok/emacs.d/blob/main/init.el
+
+;; (use-package rust-mode    :ensure t :mode "\\.rs\\'"
+;;   :init
+;;   ;; scratchpad for rust
+;;   (setq lsp-rust-clippy-preference "on")
+;;   (use-package rust-playground
+;;     :commands (rust-playground)
+;;     :ensure t))
+
+
+;;
+;; 70 statistics and data science
+;;
+
+;;
+;; 71 csv mode
+;;
+
+(use-package csv-mode
+  :mode
+  ("\\.csv\\'" . csv-mode)
+  :init
+  ;; font-lock makes large files very sluggish
+  (add-hook 'csv-mode-hook (lambda () (font-lock-mode -1)))
+  ;; only apply to large files
+  ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
+  :config
+  (setq csv-align-max-width 7)
+  (setq csv-separators '("," "\t" ";"))
+  (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
+
+;;
+;; 72 quarto
+;;
+
+;; quarto are the next-gen data science markdowns
+(use-package quarto-mode
+  :mode
+  (("\\.Rmd" . poly-quarto-mode))
+  )
+
+;;
+;; 73 ESS
+;;
+
+
+;;
+;; 80 LSPs
+;;
+
+;; https://emacs-lsp.github.io/lsp-mode/
+;; https://ianyepan.github.io/posts/emacs-ide/
+
+
+;;
+;; 90 ORG mode 
+;;
+
+;; https://github.com/abo-abo/org-download
+;; org-cite?
+;; Org-roam "A plain-text personal knowledge management system."
+;; https://github.com/kot-behemoth/awesome-org-roam
+;; https://github.com/org-roam/org-roam-ui
+;; https://orgmode.org/worg/org-contrib/babel/uses.html
+;; https://github.com/wdavew/org-excalidraw/
+;; https://systemcrafters.net/build-a-second-brain-in-emacs/getting-started-with-org-roam/ 
+;; (use-package org-roam
+;;   :ensure t
+;;   :init
+;;   (setq org-roam-v2-ack t)
+;;   :custom
+;;   (org-roam-directory "~/RoamNotes")
+;;   (org-roam-completion-everywhere t)
+;;   :bind (("C-c n l" . org-roam-buffer-toggle)
+;;          ("C-c n f" . org-roam-node-find)
+;;          ("C-c n i" . org-roam-node-insert)
+;;          :map org-mode-map
+;;          ("C-M-i"    . completion-at-point))
+;;   :config
+;;   (org-roam-setup))
+
+;; https://www.badykov.com/emacs/be-productive-with-org-mode/
+;; https://howardism.org/Technical/Emacs/orgmode-wordprocessor.html
+
+
+;;
+;; 99 notes
+;;
 
 ;; https://protesilaos.com/emacs/dotemacs
 ;; ;;;###autoload
@@ -746,6 +1031,18 @@
 ;; (setq mac-option-modifier 'meta)
 ;; (setq mac-command-modifier 'hyper)
 
+;; WSL specific stuff
+;, https://emacsredux.com/blog/2021/12/19/using-emacs-on-windows-11-with-wsl2/
+;; https://emacsredux.com/blog/2021/12/19/wsl-specific-emacs-configuration/
+
+;; emacs 29 specific stuff 
+;; (pixel-scroll-precision-mode)
+;; unset a binding
+;;(keymap-unset clojure-mode-map (kbd "C-c C-z"))
+;; remove a binding
+;;(keymap-unset clojure-mode-map (kbd "C-c C-z") 'remove)
+
+
 
 ;; (defun mac-switch-meta nil
 ;;   "switch meta between Option and Command"
@@ -759,18 +1056,6 @@
 ;;             mac-command-modifier 'meta))))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 ;; TODO Treesitter
 ;; https://youtu.be/MZPR_SC9LzE
 
@@ -779,152 +1064,17 @@
 ;;   :ensure t
 ;;   :config (treemacs-icons-dired-mode))
 
+;; code-compass: a guide in your software development 
+;; https://github.com/ag91/code-compass
+;; https://emacsconf.org/2020/talks/24/
+;; https://ag91.github.io/blog/2020/12/27/emacs-as-your-code-compass-how-complex-is-this-code/
 
-;;
-;; 60 Programming modes
-;;
+;; emacs buddy
+;; https://github.com/ag91/emacs-buddy
 
-;; hex colour code will be highlighted in the corresponding colour
-(use-package rainbow-mode
-  ;;:delight
-  :diminish
-  :hook ((prog-mode text-mode) . rainbow-mode))
+;; AI
+;; https://github.com/xenodium/chatgpt-shell
+;; https://github.com/tyler-dodge/org-assistant
 
-
-;; colour-code delimiter/parens depth
-(use-package rainbow-delimiters
-  :defer nil
-  :config
-  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-
-
-;; highlight matching parens (ensure nil, because this is a core package)
-(use-package paren
-  :ensure nil
-  :init
-  (setq show-paren-delay 0)
-  :config
-  (setq show-paren-style 'mixed)
-  (show-paren-mode +1))
-
-
-;; this has a lot of examples:
-;; https://ebzzry.com/en/emacs-pairs/#installation
-(use-package smartparens
-  :init
-  :hook
-  (prog-mode . smartparens-mode)
-  (emacs-lisp-mode . smartparens-strict-mode)
-  :config
-  (progn
-    ;; load defaults
-    (require 'smartparens-config)
-    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-    (setq sp-show-pair-from-inside nil)
-    )
-  ;; :diminish smartparens-mode
-  :custom-face
-  (sp-show-pair-match-face ((t (:foreground "Red")))) ;; Could also have :background "Grey" for example.
-  )
-
-
-;; yaml mode
-(use-package yaml-mode
-  :mode "\\.yml\\'")
-
-
-;; lua mode 
-(use-package lua-mode
-  :defer t)
-
-
-;;(use-package flycheck
-;;  :ensure t)
-
-
-;;
-;; 61 Rust
-;;
-
-;; https://robert.kra.hn/posts/rust-emacs-setup/
-
-;;
-;; 70 Statistics and Data Science
-;;
-
-;;
-;; 71 csv mode
-;;
-
-(use-package csv-mode
-  :mode
-  ("\\.csv\\'" . csv-mode)
-  :init
-  ;; font-lock makes large files very sluggish
-  (add-hook 'csv-mode-hook (lambda () (font-lock-mode -1)))
-  ;; only apply to large files
-  ;; (when (> (point-max) some-large-number) (font-lock-mode -1))
-  :config
-  (setq csv-align-max-width 7)
-  (setq csv-separators '("," "\t" ";"))
-  (define-key csv-mode-map (kbd "C-c C-a") 'csv-align-mode))
-
-;;
-;; 72 quarto
-;;
-
-;; quarto are the next-gen data science markdowns
-(use-package quarto-mode
-  :mode
-  (("\\.Rmd" . poly-quarto-mode))
-  )
-
-;;
-;; 73 ESS
-;;
-
-;;
-;; 80 LSPs
-;;
-
-;; https://emacs-lsp.github.io/lsp-mode/
-
-
-;;
-;; 90 ORG mode 
-;;
-
-;; https://github.com/abo-abo/org-download
-;; org-cite?
-;; Org-roam "A plain-text personal knowledge management system."
-;; https://github.com/kot-behemoth/awesome-org-roam
-;; https://github.com/org-roam/org-roam-ui
-;; https://orgmode.org/worg/org-contrib/babel/uses.html
-;; https://github.com/wdavew/org-excalidraw/
-;; https://systemcrafters.net/build-a-second-brain-in-emacs/getting-started-with-org-roam/ 
-;; (use-package org-roam
-;;   :ensure t
-;;   :init
-;;   (setq org-roam-v2-ack t)
-;;   :custom
-;;   (org-roam-directory "~/RoamNotes")
-;;   (org-roam-completion-everywhere t)
-;;   :bind (("C-c n l" . org-roam-buffer-toggle)
-;;          ("C-c n f" . org-roam-node-find)
-;;          ("C-c n i" . org-roam-node-insert)
-;;          :map org-mode-map
-;;          ("C-M-i"    . completion-at-point))
-;;   :config
-;;   (org-roam-setup))
-
-
-
-;;
-;; 99 notes
-;;
-
-;; how to bind keys to different modes
-;; :bind (("C-c a" . org-agenda)
-;;        ("<f6>"  . org-capture)
-;;        :map org-mode-map
-;;        ("<M-S-return>" . org-insert-subheading))
+;; prescient
+;; https://github.com/radian-software/prescient.el
