@@ -2,7 +2,7 @@
 ;; 00 Table of Contents
 ;;
 
-(occur "^;; [0-9]+")
+; (occur "^;; [0-9]+")
 
 ;;
 ;; 01 package management
@@ -15,6 +15,7 @@
 
 (package-initialize)
 
+;; TODO Emacs 29 will have use-package as part of core
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -171,6 +172,7 @@
 (setq inhibit-compacting-font-caches t)
 
 (use-package doom-modeline
+  :after all-the-icons
   :defer nil
   :config
   (setq doom-modeline-minor-modes t)
@@ -558,6 +560,7 @@
 
 ;; Distraction-free screen
 (use-package olivetti
+  :ensure t 
   :init
   (setq olivetti-body-width .67)
   :config
@@ -852,7 +855,7 @@ Use prefix key to enter admonition block."
     ;; load defaults
     (require 'smartparens-config)
     ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-    (setq sp-show-pair-from-inside nil)
+    (setq sp-show-pair-from-inside t)
     )
   ;; :diminish smartparens-mode
   :custom-face
@@ -875,7 +878,14 @@ Use prefix key to enter admonition block."
 ;; Spellchecking in comments and strings
 (add-hook 'paradox-mode-hook 'flyspell-prog-mode)
 
+
 (use-package company)
+
+
+;; https://erick.navarro.io/blog/testing-an-api-with-emacs-and-restclient/
+(use-package restclient
+  :mode (("\\.http\\'" . restclient-mode)))
+
 
 
 ;;(use-package flycheck
@@ -948,6 +958,15 @@ Use prefix key to enter admonition block."
 ;;
 
 
+
+
+;;
+;; 74 Jupyter notebooks
+;;
+
+;; https://github.com/emacs-jupyter/jupyter
+
+
 ;;
 ;; 80 LSPs
 ;;
@@ -990,6 +1009,9 @@ Use prefix key to enter admonition block."
 ;;
 ;; 99 notes
 ;;
+
+;; TODO emacs 29, tons of clean stuff here: https://github.com/victorolinasc/dot_emacs
+
 
 ;; https://protesilaos.com/emacs/dotemacs
 ;; ;;;###autoload
@@ -1078,3 +1100,25 @@ Use prefix key to enter admonition block."
 
 ;; prescient
 ;; https://github.com/radian-software/prescient.el
+
+
+
+
+;; ;; After publishing the above, I learnt about this variable, which has
+;; ;; the same effect as `prot/bookmark-save-no-prompt':
+;; (setq bookmark-save-flag 1)
+
+;; (setq savehist-additional-variables '(register-alist kill-ring))
+
+;; (savehist-mode 1)
+
+;; ;; Make Emacs repeat the C-u C-SPC command (`set-mark-command') by
+;; ;; following it up with another C-SPC.  It is faster to type
+;; ;; C-u C-SPC, C-SPC, C-SPC, than C-u C-SPC, C-u C-SPC, C-u C-SPC...
+;; (setq set-mark-command-repeat-pop t)
+
+;; pdftools
+;; https://xenodium.com/trying-out-emacs-pdf-tools/
+;; https://github.com/vedang/pdf-tools
+
+
