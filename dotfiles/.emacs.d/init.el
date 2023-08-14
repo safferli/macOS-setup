@@ -1,3 +1,5 @@
+;;; init.el --- -*- lexical-binding: t; -*-
+
 ;;
 ;; 00 Table of Contents
 ;;
@@ -16,6 +18,7 @@
 (package-initialize)
 
 ;; TODO Emacs 29 will have use-package as part of core
+;; TODO Emacs 30 integrates vc: into use-package: https://tony-zorman.com/posts/use-package-vc.html
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -35,6 +38,10 @@
 
 ;; generate statistics with M-x use-package-report
 (setq use-package-compute-statistics t)
+
+;; emacs startup profiler -- errors out
+;; (use-package esup)
+
 
 ;;
 ;; 02 name and email
@@ -172,7 +179,7 @@
 (setq inhibit-compacting-font-caches t)
 
 (use-package doom-modeline
-  :after all-the-icons
+  ;;:after all-the-icons
   :defer nil
   :config
   (setq doom-modeline-minor-modes t)
@@ -233,16 +240,24 @@
   (do-applescript "tell application \"Microsoft Edge\" to return Title of active tab of front window"))
 
 (defun safferli/get-current-url-firefox ()
-  (do-applescript "tell application \"Firefox\" to activate tell
-                   application \"System Events\" keystroke \"l\" using
-                   command down keystroke \"c\" using command down key
-                   code 53 -- esc key end tell delay 0.1 return the
-                   clipboard"))
+  (do-applescript "tell application \"Firefox\" to activate
+                   tell application \"System Events\"
+                     keystroke \"l\" using command down keystroke
+                               \"c\" using command down key
+                               code 53 -- esc key
+                   end tell
+                   delay 0.1
+                   return the clipboard"))
 
 ;; tell application "System Events" to tell process "Firefox"
 ;; 	set frontmost to true
 ;; 	set the_title to name of windows's item 1
 ;; end tell
+
+;; If you're running GUI Emacs on macOS (AKA Emacs NeXTStep port),
+;; don't forget about ns-do-applescript, which runs AppleScript
+;; directly from Emacs. It can be a lot faster than shelling out to
+;; osascript
 
 
 ;; https://pragmaticemacs.wordpress.com/category/editing/ 
@@ -290,6 +305,10 @@
 ;; 25 global settings 
 ;;
 
+;; https://andrewjamesjohnson.com/suppressing-ad-handle-definition-warnings-in-emacs/ 
+(setq ad-redefinition-action 'accept)
+
+
 ;; M-x world-clock
 (setq display-time-world-list
   '(("Etc/UTC" "UTC")
@@ -302,7 +321,7 @@
 
 
 ;; put all backups (~ files) in a backup dir
-(defvar --backup-directory (concat user-emacs-directory "backups"))
+(defvar --backup-directory (concat user-emacs-directory "backups/")) ; does this need trailing / ?
 (if (not (file-exists-p --backup-directory))
     (make-directory --backup-directory t))
 (setq backup-directory-alist `(("." . ,--backup-directory)))
@@ -336,6 +355,7 @@
     :ensure nil
     :config
     (global-display-line-numbers-mode))
+;; (add-hook 'pdf-view-mode-hook #'my-turn-off-line-numbers)
 
 
 ;; opens a macOS X finder in the current folder 
@@ -368,8 +388,8 @@
 (global-set-key [home] 'beginning-of-buffer) 
 (global-set-key [end]  'end-of-buffer) 
 ;; join line to next line
-(global-set-key (kbd "C-j")
-            (lambda ()
+(global-set-key (kbd "C-c j")
+		(lambda ()
                   (interactive)
                   (join-line -1)))
 
@@ -403,6 +423,7 @@
 ;; 29 fun stuff
 ;;
 
+;; M-x dad-joke
 (use-package dad-joke)
 
 
@@ -494,7 +515,7 @@
   (setq-default ispell-program-name "aspell")
   (setq ispell-really-aspell t))
 
-;; needed if using aspell, because -l means "language" there
+
 ;; (setq ispell-list-command "--list")
 
 (use-package flyspell
@@ -505,8 +526,8 @@
     )
   ;(flyspell-mode 1)
   :config
-  (setq ispell-program-name "aspell")
-  (setq ispell-list-command "--list") ;; run flyspell with aspell, not ispell
+  (setq ispell-program-name "aspell") ; run flyspell with aspell, not ispell
+  (setq ispell-list-command "--list") ; needed if using aspell, because -l means "language" there
   ;; Sets flyspell correction to use two-finger mouse click
   (define-key flyspell-mouse-map [down-mouse-3] #'flyspell-correct-word)
   )
@@ -519,7 +540,7 @@
 
 (defun safferli/flyspell-english ()
   (interactive)
-  (ispell-change-dictionary "default")
+  (ispell-change-dictionary "en_GB-ise-w_accents")
   (flyspell-buffer))
 
 
@@ -574,7 +595,7 @@
           (text-scale-increase 2)
 	  ;; fake center-cursor-mode:
 	  ;; center cursor and then activate scroll-lock-mode 
-	  (recenter-top-bottom)
+	  (recenter)
 	  (scroll-lock-mode 1)
           (olivetti-mode t))
         (progn
@@ -603,7 +624,7 @@
   )
 
 
-;; ;; do I reallky wont this? 
+;; ;; do I really want this? 
 ;; (use-package puni
 ;;   :defer t
 ;;   :hook ((prog-mode sgml-mode) . puni-mode))
@@ -647,6 +668,41 @@
 ;; https://ianyepan.github.io/posts/emacs-git-gutter/
 ;; or use this? https://github.com/dgutov/diff-hl
 
+;; need to figure out the browser database directory and homebrew first... 
+;; ;; interact with your browser via emacs
+;; (use-package ibrowse
+;;   :bind
+;;   ("C-c b c" . ibrowse-tab-copy-url)
+;;   ("C-c b l" . ibrowse-tab-insert-markdown-link)
+;;   )
+
+
+;; regexp magic
+;; https://www.masteringemacs.org/article/re-builder-interactive-regexp-builder 
+(use-package re-builder
+  :ensure nil 
+  :config
+  (setq reb-re-syntax 'string)
+  )
+
+;; transpose stuff -- including sexp!
+;; http://yummymelon.com/devnull/moving-text-elegantly-in-emacs.html
+(defun cc/move-sexp-backward ()
+  "Move balanced expression (sexp) to the right of point backward one sexp.
+Point must be at the beginning of balanced expression (sexp)."
+  (interactive)
+  (transpose-sexps 1)
+  (forward-sexp -2))
+
+(defun cc/move-sexp-forward ()
+  "Move balanced expression (sexp) to the right of point forward one sexp.
+Point must be at the beginning of balanced expression (sexp)."
+  (interactive)
+  (forward-sexp 1)
+  (transpose-sexps 1)
+  (forward-sexp -1))
+
+
 
 ;;
 ;; 45 translation
@@ -669,7 +725,7 @@
 ;;
 
 ;; markdown mode
-(use-package markdown-mode
+(use-package markdown-mode 
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
@@ -802,19 +858,15 @@ Use prefix key to enter admonition block."
   :bind
   ("M-g" . magit-status))
 
-;; make file executable if first line has shebang
-(add-hook 'after-save-hook
-          'executable-make-buffer-file-executable-if-script-p)
-
-
-;; expands at point to useful things
-(global-set-key "\M- " 'hippie-expand)
-
-
 
 ;;
 ;; 60 programming modes
 ;;
+
+;; make file executable if first line has shebang
+(add-hook 'after-save-hook
+          'executable-make-buffer-file-executable-if-script-p)
+
 
 ;; hex colour code will be highlighted in the corresponding colour
 (use-package rainbow-mode
@@ -854,7 +906,6 @@ Use prefix key to enter admonition block."
   (progn
     ;; load defaults
     (require 'smartparens-config)
-    ;;(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
     (setq sp-show-pair-from-inside t)
     )
   ;; :diminish smartparens-mode
@@ -906,12 +957,9 @@ Use prefix key to enter admonition block."
 ;;
 
 ;; https://robert.kra.hn/posts/rust-emacs-setup/
-
-;;
-;; Rust
-;;
-
+;; https://www.unwoundstack.com/blog/emacs-as-a-rust-ide.html
 ;; gavinok https://github.com/Gavinok/emacs.d/blob/main/init.el
+;; https://youtu.be/omJhc7zprNs
 
 ;; (use-package rust-mode    :ensure t :mode "\\.rs\\'"
 ;;   :init
@@ -968,6 +1016,13 @@ Use prefix key to enter admonition block."
 
 
 ;;
+;; 75 SQLite mode (Emacs 29+)
+;;
+
+;; https://github.com/xenodium/dotsies/blob/main/emacs/ar/sqlite-mode-extras.el
+
+
+;;
 ;; 80 LSPs
 ;;
 
@@ -978,6 +1033,37 @@ Use prefix key to enter admonition block."
 ;;
 ;; 90 ORG mode 
 ;;
+
+;; getting started with org mode: https://www.youtube.com/watch?v=SzA2YODtgK4
+;; Rainer König Org Mode Tutorial: https://www.youtube.com/playlist?list=PLVtKhBrRV_ZkPnBtt_TD1Cs9PJlU0IIdE
+
+
+;; https://xenodium.com/emacs-dwim-do-what-i-mean/
+;; (defun ar/org-insert-link-dwim ()
+;;   "Like `org-insert-link' but with personal dwim preferences."
+;;   (interactive)
+;;   (let* ((point-in-link (org-in-regexp org-link-any-re 1))
+;;          (clipboard-url (when (string-match-p "^http" (current-kill 0))
+;;                           (current-kill 0)))
+;;          (region-content (when (region-active-p)
+;;                            (buffer-substring-no-properties (region-beginning)
+;;                                                            (region-end)))))
+;;     (cond ((and region-content clipboard-url (not point-in-link))
+;;            (delete-region (region-beginning) (region-end))
+;;            (insert (org-make-link-string clipboard-url region-content)))
+;;           ((and clipboard-url (not point-in-link))
+;;            (insert (org-make-link-string
+;;                     clipboard-url
+;;                     (read-string "title: "
+;;                                  (with-current-buffer (url-retrieve-synchronously clipboard-url)
+;;                                    (dom-text (car
+;;                                               (dom-by-tag (libxml-parse-html-region
+;;                                                            (point-min)
+;;                                                            (point-max))
+;;                                                           'title))))))))
+;;           (t
+;;            (call-interactively 'org-insert-link)))))
+
 
 ;; https://github.com/abo-abo/org-download
 ;; org-cite?
@@ -1011,7 +1097,10 @@ Use prefix key to enter admonition block."
 ;;
 
 ;; TODO emacs 29, tons of clean stuff here: https://github.com/victorolinasc/dot_emacs
+;; C-h a ts-mode$ : find all available treesitter modes
+;; also read the masting emacs article 
 
+;; elfeed: https://github.com/skeeto/.emacs.d/blob/449d4804dcd97109fb8bb720ebfd189280c11a70/etc/feed-setup.el 
 
 ;; https://protesilaos.com/emacs/dotemacs
 ;; ;;;###autoload
@@ -1052,6 +1141,22 @@ Use prefix key to enter admonition block."
 ;; ;; mac specific stuff
 ;; (setq mac-option-modifier 'meta)
 ;; (setq mac-command-modifier 'hyper)
+
+;; bind space to quicklook in dired. 
+;; (defun do-ql-dwim()
+;;   (interactive)
+;;   (let* ((proc (get-buffer-process "*Async Shell Command*")))
+;;     (if proc
+;; 	(kill-process proc)
+;;       (dired-do-async-shell-command
+;;        "qlmanage -p 2>/dev/null" ""
+;;        (dired-get-marked-files))
+;;       ))
+;;   )
+;; (add-hook 'dired-mode-hook (lambda ()
+;; 			     (define-key dired-mode-map " " 'do-ql-dwim)
+;; 			     ))
+
 
 ;; WSL specific stuff
 ;, https://emacsredux.com/blog/2021/12/19/using-emacs-on-windows-11-with-wsl2/
@@ -1101,7 +1206,8 @@ Use prefix key to enter admonition block."
 ;; prescient
 ;; https://github.com/radian-software/prescient.el
 
-
+;; Brent Westwood (rust and data science emacs)
+;; https://github.com/ntBre/yt-configs/blob/master/.emacs.d/init.el
 
 
 ;; ;; After publishing the above, I learnt about this variable, which has

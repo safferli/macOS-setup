@@ -44,7 +44,7 @@ sudo dos2unix /usr/local/bin/battery
 # https://gist.github.com/jasonm23/89ad29748f49ddbafab1
 brew tap railwaycat/emacsmacport
 #brew update
-brew install --cask emacs-mac
+brew install --cask emacs-mac --with-librsvg --with-native-compilation --with-imagemagick
 
 #if [[ -d /usr/local/Cellar/emacs-mac ]]; then
  # brew upgrade emacs-mac
