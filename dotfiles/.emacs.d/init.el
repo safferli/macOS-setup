@@ -85,6 +85,13 @@
   :config
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 
+(use-package all-the-icons-completion
+  :defer
+  :hook
+  (marginalia-mode . #'all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
+
 
 ;; emoji support
 (use-package emojify
@@ -108,7 +115,7 @@
 ;; Give a pulse light when switching windows, or switching focus to
 ;; the minibuffer.
 (require 'pulse)
-(set-face-attribute 'pulse-highlight-start-face nil :background "#49505f")
+(set-face-attribute 'pulse-highlight-start-face nil :background "#09055f")
 (add-hook 'window-selection-change-functions
           (lambda (frame)
             (when (eq frame (selected-frame))
@@ -149,6 +156,8 @@
   :diminish
   :init
   (golden-ratio-mode)
+  :custom
+  (golden-ratio-exclude-modes '(occur-mode))
   )
 
 
@@ -298,6 +307,10 @@
     (kill-word 1)))
 (global-set-key (kbd "C-<delete>") 'safferli/kill-whitespace-or-word)
 
+(defun safferli/turn-off-line-numbers ()
+  "Disable line numbering in the current buffer."
+  (display-line-numbers-mode -1))
+
 
 
 
@@ -355,7 +368,7 @@
     :ensure nil
     :config
     (global-display-line-numbers-mode))
-;; (add-hook 'pdf-view-mode-hook #'my-turn-off-line-numbers)
+
 
 
 ;; opens a macOS X finder in the current folder 
@@ -396,7 +409,6 @@
 
 ; start a command and wait, then this will show the completions available:
 (use-package which-key
-  ;;:defer nil
   :diminish
   :init
   (which-key-mode)
@@ -417,6 +429,9 @@
 (global-set-key (kbd "C-`") 'mode-line-other-buffer)
 (global-set-key (kbd "C-1") 'kill-this-buffer)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+
+;; remove ^M trailing CR from windows/samba files
+(global-set-key (kbd "C-c 5") 'delete-trailing-whitespace)
 
 
 ;;
@@ -454,11 +469,32 @@
 (add-hook 'isearch-mode-hook #'safferli/isearch-with-region)
 
 
-(use-package ido
-  :ensure t
+(use-package vertico
   :init
-  (ido-mode)
-  )
+  (vertico-mode)
+  (setq vertico-cycle t))
+
+(use-package savehist
+  :init
+  (savehist-mode))
+
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless basic)
+	;; read-buffer-completion-ignore-case t
+	))
+
+(use-package marginalia
+  :init
+  (marginalia-mode))
+
+
+
+;; (use-package ido
+;;   :ensure t
+;;   :init
+;;   (ido-mode)
+;;   )
 
 ;; (use-package ido-vertical-mode
 ;;   :requires ido
@@ -637,6 +673,43 @@
 ;; 40 productivity
 ;;
 
+;;
+;; 41 Treesitter
+;; 
+
+(use-package treesit
+  :ensure nil
+  :when (treesit-available-p)
+  :init
+  (setq treesit-language-source-alist
+	'((bash "https://github.com/tree-sitter/tree-sitter-bash")
+	  (cmake "https://github.com/uyha/tree-sitter-cmake")
+	  (css "https://github.com/tree-sitter/tree-sitter-css")
+	  (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+	  (go "https://github.com/tree-sitter/tree-sitter-go")
+	  (html "https://github.com/tree-sitter/tree-sitter-html")
+	  (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+	  (json "https://github.com/tree-sitter/tree-sitter-json")
+	  (lua "https://github.com/Azganoth/tree-sitter-lua")
+	  (make "https://github.com/alemuller/tree-sitter-make")
+	  ;;(markdown "https://github.com/ikatyang/tree-sitter-markdown")
+	  (markdown "https://github.com/MDeiml/tree-sitter-markdown")
+	  (python "https://github.com/tree-sitter/tree-sitter-python")
+	  (sql "https://github.com/m-novikov/tree-sitter-sql")
+	  (toml "https://github.com/tree-sitter/tree-sitter-toml")
+	  (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+	  (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+	  (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+  (add-to-list 'major-mode-remap-alist
+	       '(yaml-mode . yaml-ts-mode))
+  )
+
+
+;;
+;; 42 Projectile
+;; 
+
+
 (use-package projectile
   :ensure t
   :init
@@ -653,6 +726,9 @@
 ;; (setq projectile-project-search-path '("~/projects/" "~/work/" ("~/github" . 1)))
 
 
+;; After adding or updating a snippet run:
+;; =M-x yas-recompile-all=
+;; =M-x yas-reload-all=
 (use-package yasnippet
   :config
   ;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
@@ -713,7 +789,7 @@ Point must be at the beginning of balanced expression (sexp)."
 ;; https://github.com/mtenders/emacs-leo
 ;; improved version: https://codeberg.org/martianh/emacs-leo
 
-
+;; https://github.com/dmgerman/yomikun
 
 
 ;;
@@ -820,9 +896,22 @@ Use prefix key to enter admonition block."
   ("C-c C-l" . obsidian-insert-wikilink)))
 
 
+;;
+;; 55 pdf-tools
+;;
 
-
-
+(use-package pdf-tools
+  :ensure t
+  :pin manual ;; don't reinstall when package updates
+  :mode  ("\\.pdf\\'" . pdf-view-mode)
+  :config
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-annot-activate-created-annotations t)
+  (pdf-tools-install :no-query)
+  (require 'pdf-occur)
+  :hook
+  (pdf-view-mode . safferli/turn-off-line-numbers)
+  )
 
 
 ;; TODO compile magic: https://emacs.stackexchange.com/questions/31493/print-elapsed-time-in-compilation-buffer/56130#56130
@@ -915,7 +1004,8 @@ Use prefix key to enter admonition block."
 
 
 ;; yaml mode
-(use-package yaml-mode
+(use-package yaml-ts-mode
+  :ensure nil
   :mode "\\.yml\\'")
 
 
@@ -1088,8 +1178,12 @@ Use prefix key to enter admonition block."
 ;;   :config
 ;;   (org-roam-setup))
 
+;; https://github.com/Ethanlinyf/General-Pure-Emacs/blob/main/lisp/init-r-roam.el
+
 ;; https://www.badykov.com/emacs/be-productive-with-org-mode/
 ;; https://howardism.org/Technical/Emacs/orgmode-wordprocessor.html
+
+;; https://lucidmanager.org/data-science/visualise-org-roam/
 
 
 ;;
@@ -1099,6 +1193,11 @@ Use prefix key to enter admonition block."
 ;; TODO emacs 29, tons of clean stuff here: https://github.com/victorolinasc/dot_emacs
 ;; C-h a ts-mode$ : find all available treesitter modes
 ;; also read the masting emacs article 
+
+;; treesitter movement package: https://github.com/haritkapadia/ts-movement
+
+;; https://github.com/gopar/.emacs.d 
+
 
 ;; elfeed: https://github.com/skeeto/.emacs.d/blob/449d4804dcd97109fb8bb720ebfd189280c11a70/etc/feed-setup.el 
 
@@ -1228,3 +1327,35 @@ Use prefix key to enter admonition block."
 ;; https://github.com/vedang/pdf-tools
 
 
+;; (defun split-para-at-sentence-ends ()
+;;   "Split current paragraph into lines with one sentence each.
+;; Then turn off `auto-fill-mode'."
+;;   (interactive)
+;;   (let ((mode  major-mode))
+;;     (unwind-protect
+;;          (progn (text-mode)
+;;                 (save-excursion
+;;                   (let ((emacs-lisp-docstring-fill-column  t)
+;;                         (fill-column                       (point-max)))
+;;                     (fill-paragraph))
+;;                   (let ((bop  (copy-marker (progn (backward-paragraph) (point))))
+;;                         (eop  (copy-marker (progn (forward-paragraph)  (point)))))
+;;                     (goto-char bop)
+;;                     (while (< (point) eop)
+;;                       (forward-sentence)
+;;                       (forward-whitespace 1)
+;;                       (unless (>= (point) eop)
+;;                         (delete-horizontal-space)
+;;                         (insert "\n"))))))
+;;       (funcall mode)))
+;;   (auto-fill-mode -1))
+
+;; (define-minor-mode split-para-mode 
+;;     "Toggle between a filled paragraph and one split into sentences."
+;;   nil nil nil
+;;   (if (not split-para-mode)
+;;       (split-para-at-sentence-ends)
+;;     (auto-fill-mode 1)
+;;     (fill-paragraph)))
+
+;; (global-set-key "\C-o" 'split-para-mode) ; Or some other key.
