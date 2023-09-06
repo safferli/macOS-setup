@@ -77,6 +77,7 @@
 ;; TODO keep an eye out for when it's stable! 
 ;; 
 ;; run M-x all-the-icons-install-fonts to install the fonts
+;; doom-modeline also needs M-x nerd-icons-install-fonts
 (use-package all-the-icons
   :if (display-graphic-p))
 
@@ -85,12 +86,12 @@
   :config
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
 
-(use-package all-the-icons-completion
-  :defer
-  :hook
-  (marginalia-mode . #'all-the-icons-completion-marginalia-setup)
-  :init
-  (all-the-icons-completion-mode))
+;; (use-package all-the-icons-completion
+;;   :defer
+;;   :hook
+;;   (marginalia-mode . #'all-the-icons-completion-marginalia-setup)
+;;   :init
+;;   (all-the-icons-completion-mode))
 
 
 ;; emoji support
@@ -158,7 +159,7 @@
   (golden-ratio-mode)
   :custom
   (golden-ratio-exclude-modes '(occur-mode))
-  )
+   )
 
 
 ;; breaks scroll (perhaps because on mac?)
@@ -706,7 +707,19 @@
 
 
 ;;
-;; 42 Projectile
+;; 42 eglot LSP
+;;
+
+;; (use-package eglot
+;;   :bind (:map eglot-mode-map
+;; 	      ("C-c d" . eldoc)
+;; 	      ("C-c a" . eglot-code-actions)
+;; 	      ("C-c r" . eglot-rename))
+;;   )
+
+
+;;
+;; 43 Projectile
 ;; 
 
 
@@ -761,6 +774,7 @@
   (setq reb-re-syntax 'string)
   )
 
+
 ;; transpose stuff -- including sexp!
 ;; http://yummymelon.com/devnull/moving-text-elegantly-in-emacs.html
 (defun cc/move-sexp-backward ()
@@ -777,6 +791,14 @@ Point must be at the beginning of balanced expression (sexp)."
   (forward-sexp 1)
   (transpose-sexps 1)
   (forward-sexp -1))
+
+
+;; https://github.com/dmgerman/editWithEmacs.spoon
+
+;; If the hammerspoon configuration is present, and so is this spoon, load it
+(if (file-readable-p "~/.hammerspoon/Spoons/editWithemacs.spoon/hammerspoon.el")
+    (let ((load-path (cons "~/.hammerspoon/Spoons/editWithemacs.spoon" load-path )))
+      (require 'hammerspoon)))
 
 
 
@@ -1020,12 +1042,17 @@ Use prefix key to enter admonition block."
 (add-hook 'paradox-mode-hook 'flyspell-prog-mode)
 
 
-(use-package company)
+(use-package company
+  :config
+  (setq company-idle-delay 0.1
+	company-miimum-prefix-length 1)
+  )
 
 
 ;; https://erick.navarro.io/blog/testing-an-api-with-emacs-and-restclient/
 (use-package restclient
-  :mode (("\\.http\\'" . restclient-mode)))
+  :mode (("\\.http\\'" . restclient-mode))
+  )
 
 
 
@@ -1040,6 +1067,29 @@ Use prefix key to enter admonition block."
 ;; http://www.skybert.net/emacs/programming-python-in-emacs-2015/
 ;; is there a more modern setup by now?
 ;; https://realpython.com/emacs-the-best-python-editor/
+
+;; ;; https://youtu.be/SbTzIt6rISg Brent Westbrook
+;; (use-package python
+;;   :hook ((python-ts-mode . eglot-ensure)
+;; 	 (pyhton-ts-mode . company-mode))
+;;   :bind (:map python-ts-mode-map
+;; 	      ("<f5>" . recompile)
+;; 	      ("<f6>" . eglot-format))
+;;   :mode (("\\.py\\'" . python-ts-mode))
+;;   )
+
+;; (use-package conda
+;;   :config
+;;   (setq conda-env-home-directory
+;; 	(expand-file-name "~/whatever"))
+;;   )
+
+;; (use-package highlight-indent-guides
+;;   :hook (python-ts-mode . highlight-indent-guides-mode)
+;;   :config
+;;   (set-face-foreground 'highlight-indent-guides-character-face "white")
+;;   (setq highlight-indent-guides-method 'character)
+;;   )
 
 
 ;;
